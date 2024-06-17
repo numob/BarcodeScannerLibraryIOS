@@ -14,6 +14,7 @@
 		8CA357812C20A1B200422746 /* SymbolDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA357802C20A1B200422746 /* SymbolDetectorTests.swift */; };
 		8CA3578B2C20A1B200422746 /* SymbolDetectorUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA3578A2C20A1B200422746 /* SymbolDetectorUITests.swift */; };
 		8CA3578D2C20A1B200422746 /* SymbolDetectorUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA3578C2C20A1B200422746 /* SymbolDetectorUITestsLaunchTests.swift */; };
+		8CA3579E2C20A90B00422746 /* BarcodeScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA3579D2C20A90B00422746 /* BarcodeScannerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,6 +46,7 @@
 		8CA357862C20A1B200422746 /* SymbolDetectorUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SymbolDetectorUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8CA3578A2C20A1B200422746 /* SymbolDetectorUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolDetectorUITests.swift; sourceTree = "<group>"; };
 		8CA3578C2C20A1B200422746 /* SymbolDetectorUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolDetectorUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		8CA3579D2C20A90B00422746 /* BarcodeScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeScannerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -97,6 +99,7 @@
 			children = (
 				8CA3576E2C20A1B100422746 /* SymbolDetectorApp.swift */,
 				8CA357702C20A1B100422746 /* ContentView.swift */,
+				8CA3579D2C20A90B00422746 /* BarcodeScannerView.swift */,
 				8CA357722C20A1B200422746 /* Assets.xcassets */,
 				8CA357742C20A1B200422746 /* SymbolDetector.entitlements */,
 				8CA357752C20A1B200422746 /* Preview Content */,
@@ -259,6 +262,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8CA3579E2C20A90B00422746 /* BarcodeScannerView.swift in Sources */,
 				8CA357712C20A1B100422746 /* ContentView.swift in Sources */,
 				8CA3576F2C20A1B100422746 /* SymbolDetectorApp.swift in Sources */,
 			);
