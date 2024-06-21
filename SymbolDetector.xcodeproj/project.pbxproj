@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8C19FBD22C261B4100A9D839 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 8C19FBD12C261B4100A9D839 /* .gitignore */; };
 		8CA3576F2C20A1B100422746 /* SymbolDetectorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA3576E2C20A1B100422746 /* SymbolDetectorApp.swift */; };
 		8CA357712C20A1B100422746 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA357702C20A1B100422746 /* ContentView.swift */; };
 		8CA357732C20A1B200422746 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8CA357722C20A1B200422746 /* Assets.xcassets */; };
@@ -14,7 +15,7 @@
 		8CA357812C20A1B200422746 /* SymbolDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA357802C20A1B200422746 /* SymbolDetectorTests.swift */; };
 		8CA3578B2C20A1B200422746 /* SymbolDetectorUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA3578A2C20A1B200422746 /* SymbolDetectorUITests.swift */; };
 		8CA3578D2C20A1B200422746 /* SymbolDetectorUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA3578C2C20A1B200422746 /* SymbolDetectorUITestsLaunchTests.swift */; };
-		8CA3579E2C20A90B00422746 /* BarcodeScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA3579D2C20A90B00422746 /* BarcodeScannerView.swift */; };
+		8CA357A62C20B9B700422746 /* DataScannerRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA357A52C20B9B700422746 /* DataScannerRepresentable.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -35,6 +36,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		8C19FBD12C261B4100A9D839 /* .gitignore */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		8CA3576B2C20A1B100422746 /* SymbolDetector.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SymbolDetector.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8CA3576E2C20A1B100422746 /* SymbolDetectorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolDetectorApp.swift; sourceTree = "<group>"; };
 		8CA357702C20A1B100422746 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -46,7 +48,7 @@
 		8CA357862C20A1B200422746 /* SymbolDetectorUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SymbolDetectorUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8CA3578A2C20A1B200422746 /* SymbolDetectorUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolDetectorUITests.swift; sourceTree = "<group>"; };
 		8CA3578C2C20A1B200422746 /* SymbolDetectorUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolDetectorUITestsLaunchTests.swift; sourceTree = "<group>"; };
-		8CA3579D2C20A90B00422746 /* BarcodeScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeScannerView.swift; sourceTree = "<group>"; };
+		8CA357A52C20B9B700422746 /* DataScannerRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataScannerRepresentable.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -77,6 +79,7 @@
 		8CA357622C20A1B100422746 = {
 			isa = PBXGroup;
 			children = (
+				8C19FBD12C261B4100A9D839 /* .gitignore */,
 				8CA3576D2C20A1B100422746 /* SymbolDetector */,
 				8CA3577F2C20A1B200422746 /* SymbolDetectorTests */,
 				8CA357892C20A1B200422746 /* SymbolDetectorUITests */,
@@ -97,9 +100,9 @@
 		8CA3576D2C20A1B100422746 /* SymbolDetector */ = {
 			isa = PBXGroup;
 			children = (
+				8CA357A52C20B9B700422746 /* DataScannerRepresentable.swift */,
 				8CA3576E2C20A1B100422746 /* SymbolDetectorApp.swift */,
 				8CA357702C20A1B100422746 /* ContentView.swift */,
-				8CA3579D2C20A90B00422746 /* BarcodeScannerView.swift */,
 				8CA357722C20A1B200422746 /* Assets.xcassets */,
 				8CA357742C20A1B200422746 /* SymbolDetector.entitlements */,
 				8CA357752C20A1B200422746 /* Preview Content */,
@@ -237,6 +240,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8CA357772C20A1B200422746 /* Preview Assets.xcassets in Resources */,
+				8C19FBD22C261B4100A9D839 /* .gitignore in Resources */,
 				8CA357732C20A1B200422746 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -262,7 +266,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8CA3579E2C20A90B00422746 /* BarcodeScannerView.swift in Sources */,
+				8CA357A62C20B9B700422746 /* DataScannerRepresentable.swift in Sources */,
 				8CA357712C20A1B100422746 /* ContentView.swift in Sources */,
 				8CA3576F2C20A1B100422746 /* SymbolDetectorApp.swift in Sources */,
 			);
@@ -421,6 +425,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = SymbolDetector/SymbolDetector.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"SymbolDetector/Preview Content\"";
@@ -428,6 +433,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "We need access to the camera in order to scan barcodes";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -459,6 +465,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = SymbolDetector/SymbolDetector.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"SymbolDetector/Preview Content\"";
@@ -466,6 +473,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "We need access to the camera in order to scan barcodes";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
