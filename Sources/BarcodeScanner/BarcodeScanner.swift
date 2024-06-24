@@ -10,22 +10,40 @@ import VisionKit
 import Foundation
 import UIKit
 
-/// a class that incorporates custom logic to selecting and returning barcodes recognized from DataScannerViewController
-/// recognizedItem (fromDataScannerViewController item),
-/// containsTarget: a bool reference that is returned from this class on whether or not the recognized item includes the target (crosshair plus icon),
-/// isTargetVisible: a bool reference that sets the target visible or not,
-/// focusedViewWidth, and focusedViewHeight: set the dimensions of the focused view, which is a view that restricts the recognized items within the view; optional
+/// A class that incorporates custom logic to select and return barcodes recognized from DataScannerViewController.
+/// - Parameters:
+///   - onRecognizedItem: A callback function that handles the recognized item and whether it includes the target.
+///   - isTargetVisible: A boolean  that sets the target visible or not; optional and default true
+///   - focusedViewWidth: Sets the width of the focused view, which restricts the recognized items within the view; optional.
+///   - focusedViewHeight: Sets the height of the focused view, which restricts the recognized items within the view; optional.
 /// Example:
-///  --> BarcodeScannerView(recognizedItem: $recognizedItem, containsTarget: $containsTarget, isTargetVisible: $target, focusedViewWidth: 200, focusedViewHeight: 200)
-///  --> BarcodeScannerView(recognizedItem: $recognizedItem, containsTarget: $containsTarget, isTargetVisible: $target)
-///  Includes data labels for coordinates, dimensions, and recognized item data --> use for debugging
-///  displayOrientationLabel(),  displayRecognizedItemCoordinates(items: items), displayFrameCoords(), displayFocusDimensions()
+/// ```
+/// BarcodeScannerView(
+///     onRecognizedItem: { recognizedItem, containsTarget in
+///         self.recognizedItem = recognizedItem
+///         self.containsTarget = containsTarget
+///     },
+///     isTargetVisible: false,
+///     focusedViewWidth: 200,
+///     focusedViewHeight: 200,
+/// )
+/// BarcodeScannerView(
+///     onRecognizedItem: { recognizedItem, containsTarget in
+///         self.recognizedItem = recognizedItem
+///         self.containsTarget = containsTarget
+///     }
+/// )
+/// ```
+/// Includes data labels for coordinates, dimensions, and recognized item data for debugging:
+/// - displayOrientationLabel()
+/// - displayRecognizedItemCoordinates(items: items)
+/// - displayFrameCoords()
+/// - displayFocusDimensions()
 
 @MainActor
 struct BarcodeScannerView: UIViewControllerRepresentable {
-    @Binding var recognizedItem: RecognizedItem?
-    @Binding var containsTarget: Bool
-    @Binding var isTargetVisible: Bool
+    var onRecognizedItem: (RecognizedItem?, Bool) -> Void
+    var isTargetVisible: Bool = true
     var focusedViewWidth: CGFloat?
     var focusedViewHeight: CGFloat?
     var scannerViewController: DataScannerViewController = DataScannerViewController(
@@ -87,7 +105,7 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
     }
     
     func makeCoordinator() -> Coordinator {
-        return Coordinator(self)
+        return Coordinator(self, onRecognizedItem: onRecognizedItem)
     }
     func displayCutoutDimensions() {
         guard let cutout = (scannerViewController.view.subviews.first { $0 is FocusedView } as? FocusedView)?.focusBox else { return }
@@ -110,10 +128,12 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
         var roundBoxMappings: [UUID: UIView] = [:]
         var coordinateLabels: [UUID: UILabel] = [:]
         var deviceOrientationLabel: UILabel?
+        var onRecognizedItem: (RecognizedItem?, Bool) -> Void
+
         
-        
-        init(_ parent: BarcodeScannerView) {
+        init(_ parent: BarcodeScannerView, onRecognizedItem: @escaping (RecognizedItem?, Bool) -> Void) {
             self.parent = parent
+            self.onRecognizedItem = onRecognizedItem
             super.init()
             NotificationCenter.default.addObserver(self, selector: #selector(onOrientationChange), name: UIDevice.orientationDidChangeNotification, object: nil)
         }
@@ -146,6 +166,7 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
             removeAllCoordinateLabels()
             
             if items.isEmpty {
+                onRecognizedItem(nil, false)
                 return
             }
             
@@ -157,9 +178,11 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
                 visibleItems = items
             }
             
-            guard let closestItem = findClosestToCenter(items: visibleItems) else { return }
+            guard let closestItem = findClosestToCenter(items: visibleItems) else {
+                onRecognizedItem(nil, false)
+                return
+            }
             processItem(item: closestItem)
-            //displayRecognizedItemCoordinates(items: items)
         }
         
         
@@ -222,7 +245,7 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
             removeAllCoordinateLabels()
             
             let frame = calculateSelectedFrame(item: item)
-            //displaySelectedCoords(frame: frame)
+            // displaySelectedCoords(frame: frame)
             switch item {
             case .barcode:
                 addSelectionFrame(frame: frame, text: nil, item: item)
@@ -230,12 +253,14 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
                 print("No items recognized")
             }
             
-            parent.recognizedItem = item
+            let containsTarget: Bool
             if parent.focusedViewWidth != nil && parent.focusedViewHeight != nil {
-                parent.containsTarget = isTargetWithinItemBounds(item: item)
+                containsTarget = isTargetWithinItemBounds(item: item)
             } else {
-                parent.containsTarget = true
+                containsTarget = true
             }
+            
+            onRecognizedItem(item, containsTarget)
         }
         
         func isTargetWithinItemBounds(item: RecognizedItem) -> Bool {
