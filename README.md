@@ -17,19 +17,21 @@ A class that incorporates custom logic for selecting and returning barcodes reco
 
 ### Example:
 ```swift
-BarcodeScannerView(
-    recognizedItem: $recognizedItem, 
-    containsTarget: $containsTarget, 
-    isTargetVisible: $target, 
-    focusedViewWidth: 200, 
-    focusedViewHeight: 200
-)
-BarcodeScannerView(
-    recognizedItem: $recognizedItem, 
-    containsTarget: $containsTarget, 
-    isTargetVisible: $target
-)
+        BarcodeScannerView(
+            onRecognizedItem: { recognizedItem, containsTarget in
+                self.recognizedItem = recognizedItem
+                self.containsTarget = containsTarget
+            },
+            isTargetVisible: true,
+            focusedViewWidth: 200,
+            focusedViewHeight: 200
 
+        BarcodeScannerView(
+            onRecognizedItem: { recognizedItem, containsTarget in
+                self.recognizedItem = recognizedItem
+                self.containsTarget = containsTarget
+            }
+        )
 ```
 ## Preview
 <img src="https://github.com/numob/BarcodeScannerLibraryIOS/assets/164918815/6d877515-9bbf-4189-a901-6f2b0821fcd5" alt="Screenshot 2024-06-24 at 1 44 24 PM" width="400"/>
