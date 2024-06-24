@@ -10,6 +10,17 @@ import VisionKit
 import Foundation
 import UIKit
 
+/// a class that incorporates custom logic to selecting and returning barcodes recognized from DataScannerViewController
+/// recognizedItem (fromDataScannerViewController item),
+/// containsTarget: a bool reference that is returned from this class on whether or not the recognized item includes the target (crosshair plus icon),
+/// isTargetVisible: a bool reference that sets the target visible or not,
+/// focusedViewWidth, and focusedViewHeight: set the dimensions of the focused view, which is a view that restricts the recognized items within the view; optional
+/// Example:
+///  --> BarcodeScannerView(recognizedItem: $recognizedItem, containsTarget: $containsTarget, isTargetVisible: $target, focusedViewWidth: 200, focusedViewHeight: 200)
+///  --> BarcodeScannerView(recognizedItem: $recognizedItem, containsTarget: $containsTarget, isTargetVisible: $target)
+///  Includes data labels for coordinates, dimensions, and recognized item data --> use for debugging
+///  displayOrientationLabel(),  displayRecognizedItemCoordinates(items: items), displayFrameCoords(), displayFocusDimensions()
+
 @MainActor
 struct BarcodeScannerView: UIViewControllerRepresentable {
     @Binding var recognizedItem: RecognizedItem?
@@ -25,18 +36,22 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
         isHighlightingEnabled: true
     )
     
-    
     func addFocusedView(to view: UIView) {
-        guard let width = focusedViewWidth, let height = focusedViewHeight else { return }
-
+        let padding: CGFloat = 10.0
+        let defaultWidth: CGFloat = view.bounds.width - 2 * padding
+        let defaultHeight: CGFloat = view.bounds.height - 2 * padding
+        
+        let width = min(focusedViewWidth ?? defaultWidth, view.bounds.width - 2 * padding)
+        let height = min(focusedViewHeight ?? defaultHeight, view.bounds.height - 2 * padding)
+        
         let viewXPosition: CGFloat = (view.bounds.width - width) / 2
         let viewYPosition: CGFloat = (view.bounds.height - height) / 2
-        let cutout = CGRect(x: viewXPosition, y: viewYPosition, width: width, height: height)
-
-        let focusedView = FocusedView(cutout: cutout)
+        let focusBox = CGRect(x: viewXPosition, y: viewYPosition, width: width, height: height)
+        
+        let focusedView = FocusedView(focus: focusBox)
         view.addSubview(focusedView)
         focusedView.translatesAutoresizingMaskIntoConstraints = false
-
+        
         NSLayoutConstraint.activate([
             focusedView.widthAnchor.constraint(equalToConstant: width),
             focusedView.heightAnchor.constraint(equalToConstant: height),
@@ -44,28 +59,28 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
             focusedView.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
     }
-
+    
     func makeUIViewController(context: Context) -> DataScannerViewController {
         scannerViewController.delegate = context.coordinator
-
+        
         do {
             try scannerViewController.startScanning()
         } catch {
             print("Failed to start scanning: \(error.localizedDescription)")
         }
-
+        
         DispatchQueue.main.async {
             addTarget(to: scannerViewController.view)
             addFocusedView(to: scannerViewController.view)
             //context.coordinator.displayOrientationLabel()
-
+            
         }
-
+        
         return scannerViewController
     }
     
     func updateUIViewController(_ uiViewController: DataScannerViewController, context: Context) {
-       // required function
+        // required function
         if let targetView = uiViewController.view.subviews.first(where: { $0 is TargetView }) {
             targetView.isHidden = !isTargetVisible
         }
@@ -75,8 +90,8 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
         return Coordinator(self)
     }
     func displayCutoutDimensions() {
-        guard let cutout = (scannerViewController.view.subviews.first { $0 is FocusedView } as? FocusedView)?.cutout else { return }
-
+        guard let cutout = (scannerViewController.view.subviews.first { $0 is FocusedView } as? FocusedView)?.focusBox else { return }
+        
         let label = UILabel()
         label.textColor = .white
         label.font = UIFont.systemFont(ofSize: 14)
@@ -84,29 +99,31 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
         label.text = "Cutout: \(Int(cutout.width)) x \(Int(cutout.height))"
         label.sizeToFit()
         label.frame.origin = CGPoint(x: 10, y: 50)
-
+        
         scannerViewController.view.subviews.filter { $0 is UILabel && $0.frame.origin == CGPoint(x: 10, y: 50) }.forEach { $0.removeFromSuperview() }
-
+        
         scannerViewController.view.addSubview(label)
     }
+    @MainActor
     class Coordinator: NSObject, DataScannerViewControllerDelegate {
         var parent: BarcodeScannerView
         var roundBoxMappings: [UUID: UIView] = [:]
         var coordinateLabels: [UUID: UILabel] = [:]
         var deviceOrientationLabel: UILabel?
-
+        
         
         init(_ parent: BarcodeScannerView) {
             self.parent = parent
             super.init()
             NotificationCenter.default.addObserver(self, selector: #selector(onOrientationChange), name: UIDevice.orientationDidChangeNotification, object: nil)
         }
-
-//        deinit {
-//            NotificationCenter.default.removeObserver(self, name: UIDevice.orientationDidChangeNotification, object: nil)
-//        }
-
-
+        
+        
+        deinit {
+            NotificationCenter.default.removeObserver(self, name: UIDevice.orientationDidChangeNotification, object: nil)
+        }
+        
+        
         func dataScanner(_ dataScanner: DataScannerViewController, didAdd addedItems: [RecognizedItem], allItems: [RecognizedItem]) {
             processItems(items: allItems)
         }
@@ -117,6 +134,7 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
         
         func dataScanner(_ dataScanner: DataScannerViewController, didUpdate updatedItems: [RecognizedItem], allItems: [RecognizedItem]) {
             processItems(items: allItems)
+            
         }
         
         func dataScanner(_ dataScanner: DataScannerViewController, didTapOn item: RecognizedItem) {
@@ -126,7 +144,7 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
         func processItems(items: [RecognizedItem]) {
             removeAllBorderedBoxes()
             removeAllCoordinateLabels()
-
+            
             if items.isEmpty {
                 return
             }
@@ -138,19 +156,19 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
             } else {
                 visibleItems = items
             }
-
+            
             guard let closestItem = findClosestToCenter(items: visibleItems) else { return }
             processItem(item: closestItem)
             //displayRecognizedItemCoordinates(items: items)
         }
-
-
+        
+        
         func isItemWithinFocus(item: RecognizedItem) -> Bool {
             guard let focusedView = (parent.scannerViewController.view.subviews.first { $0 is FocusedView } as? FocusedView),
-                  let cutout = focusedView.cutout else {
+                  let cutout = focusedView.focusBox else {
                 return false
             }
-
+            
             let (normalizedTopLeft, normalizedTopRight, normalizedBottomLeft, normalizedBottomRight) = normalizeBounds(item: item)
             
             let normalizedItemBounds = CGRect(
@@ -159,30 +177,25 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
                 width: abs(normalizedTopRight.x - normalizedTopLeft.x),
                 height: abs(normalizedBottomLeft.y - normalizedTopLeft.y)
             )
-
+            
             let normalizedCutout = normalizeBounds(coordinates: (
                 topLeft: CGPoint(x: cutout.minX, y: cutout.minY),
                 topRight: CGPoint(x: cutout.maxX, y: cutout.minY),
                 bottomLeft: CGPoint(x: cutout.minX, y: cutout.maxY),
                 bottomRight: CGPoint(x: cutout.maxX, y: cutout.maxY)
             ))
-
+            
             let normalizedCutoutBounds = CGRect(
                 x: min(normalizedCutout.topLeft.x, normalizedCutout.bottomRight.x),
                 y: min(normalizedCutout.topLeft.y, normalizedCutout.bottomRight.y),
                 width: abs(normalizedCutout.topRight.x - normalizedCutout.topLeft.x),
                 height: abs(normalizedCutout.bottomLeft.y - normalizedCutout.topLeft.y)
             )
-
-//            print(normalizedCutoutBounds.intersects(normalizedItemBounds))
-//            print(normalizedItemBounds)
-//            print(normalizedCutoutBounds)
             
             
-
-
             return normalizedCutoutBounds.intersects(normalizedItemBounds)
         }
+        
         func normalizeCutout(cutout: (x: Double, y: Double, width: Double, height: Double), image: (x: Double, y: Double, width: Double, height: Double)) -> (Double, Double, Double, Double) {
             let normalizedX = (cutout.x - image.x) / image.width
             let normalizedY = (cutout.y - image.y) / image.height
@@ -190,8 +203,8 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
             let normalizedHeight = cutout.height / image.height
             return (normalizedX, normalizedY, normalizedWidth, normalizedHeight)
         }
-
-
+        
+        
         func findClosestToCenter(items: [RecognizedItem]) -> RecognizedItem? {
             let center = CGPoint(x: parent.scannerViewController.view.bounds.midX, y: parent.scannerViewController.view.bounds.midY)
             
@@ -202,21 +215,19 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
             let itemCenter = CGPoint(x: (item.bounds.topLeft.x + item.bounds.bottomRight.x) / 2,
                                      y: (item.bounds.topLeft.y + item.bounds.bottomRight.y) / 2)
             return hypot(itemCenter.x - center.x, itemCenter.y - center.y)
-        }  
+        }
         
         func processItem(item: RecognizedItem) {
             removeAllBorderedBoxes()
             removeAllCoordinateLabels()
             
             let frame = calculateSelectedFrame(item: item)
-            //displayRoundedBoxCoordinates(frame: frame)
+            //displaySelectedCoords(frame: frame)
             switch item {
-            case .text(let text):
-                addSelectionFrame(frame: frame, text: text.transcript, item: item)
             case .barcode:
                 addSelectionFrame(frame: frame, text: nil, item: item)
-            @unknown default:
-                print("Should not happen")
+            default:
+                print("No items recognized")
             }
             
             parent.recognizedItem = item
@@ -226,7 +237,7 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
                 parent.containsTarget = true
             }
         }
-
+        
         func isTargetWithinItemBounds(item: RecognizedItem) -> Bool {
             let targetSize: CGFloat = 30.0
             let targetHalfSize = targetSize / 2.0
@@ -267,22 +278,18 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
             }
             coordinateLabels.removeAll()
         }
-
+        
         enum Rotation {
             case upright
             case rotated90
             case rotated180
             case rotated270
         }
-
+        
         
         func calculateSelectedFrame(item: RecognizedItem) -> CGRect {
             let (normalizedTopLeft, normalizedTopRight, normalizedBottomLeft, normalizedBottomRight) = normalizeBounds(item: item)
             
-//            guard let view = parent.scannerViewController.view else {
-//                return .zero
-//            }
- 
             let frame = CGRect(
                 x: min(normalizedTopLeft.x, normalizedBottomRight.x),
                 y: min(normalizedTopLeft.y, normalizedBottomRight.y),
@@ -292,8 +299,8 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
             
             return frame
         }
-
-
+        
+        
         func normalizeBounds(item: RecognizedItem? = nil, coordinates: (topLeft: CGPoint, topRight: CGPoint, bottomLeft: CGPoint, bottomRight: CGPoint)? = nil) -> (topLeft: CGPoint, topRight: CGPoint, bottomLeft: CGPoint, bottomRight: CGPoint) {
             let topLeft, topRight, bottomLeft, bottomRight: CGPoint
             
@@ -357,8 +364,8 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
             
             return (normalizedTopLeft, normalizedTopRight, normalizedBottomLeft, normalizedBottomRight)
         }
-
-
+        
+        
         
         func displayRecognizedItemCoordinates(items: [RecognizedItem]) {
             for item in items {
@@ -373,14 +380,14 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
                 let center = convertToViewCoordinate(CGPoint(x: itemCenterX, y: itemCenterY))
                 label.center = center
                 label.backgroundColor = UIColor.black.withAlphaComponent(0.7)
-
+                
                 
                 parent.scannerViewController.overlayContainerView.addSubview(label)
                 coordinateLabels[item.id] = label
             }
         }
         
-        func displayRoundedBoxCoordinates(frame: CGRect) {
+        func displayFrameCoords(frame: CGRect) {
             let label = UILabel()
             label.textColor = .blue
             label.font = UIFont.systemFont(ofSize: 12)
@@ -389,7 +396,7 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
             // offset lable to not interfere with other lables
             label.center = CGPoint(x: frame.midX, y: frame.midY + 10)
             label.backgroundColor = UIColor.black.withAlphaComponent(0.7)
-
+            
             
             parent.scannerViewController.overlayContainerView.addSubview(label)
             coordinateLabels[UUID()] = label
@@ -399,24 +406,27 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
             let viewHeight = parent.scannerViewController.view.bounds.height
             let screenWidth = UIScreen.main.bounds.width
             let screenHeight = UIScreen.main.bounds.height
-
+            
             let x = (point.x / screenWidth) * viewWidth
             let y = (point.y / screenHeight) * viewHeight
-
+            
             return CGPoint(x: x, y: y)
         }
         
         
         /// Code to display an orientation label
-        func displayCutoutDimensions() {
+        func displayFocusDimensions() {
             parent.displayCutoutDimensions()
         }
-
+        
         @objc func onOrientationChange() {
             updateDeviceOrientationLabel()
-            //displayCutoutDimensions()
+            //displayFocusDimensions()
+            updateFocusedViewBounds()
+            
+            
         }
-
+        
         func displayOrientationLabel() {
             let orientationLabel = UILabel()
             orientationLabel.textColor = .white
@@ -427,14 +437,28 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
             self.deviceOrientationLabel = orientationLabel
             updateDeviceOrientationLabel()
         }
-
+        
         func updateDeviceOrientationLabel() {
             guard let deviceOrientationLabel = deviceOrientationLabel else { return }
             let deviceOrientation = UIDevice.current.orientation
             deviceOrientationLabel.text = "Device Orientation: \(orientationString(deviceOrientation))"
             deviceOrientationLabel.sizeToFit()
         }
-
+        func updateFocusedViewBounds() {
+            guard let view = parent.scannerViewController.view, let focusedView = view.subviews.first(where: { $0 is FocusedView }) as? FocusedView else {
+                return
+            }
+            
+            guard let width = parent.focusedViewWidth, let height = parent.focusedViewHeight else { return }
+            
+            let viewXPosition: CGFloat = (view.bounds.width - width) / 2
+            let viewYPosition: CGFloat = (view.bounds.height - height) / 2
+            let focusBox = CGRect(x: viewXPosition, y: viewYPosition, width: width, height: height)
+            
+            focusedView.focusBox = focusBox
+            focusedView.setNeedsDisplay()
+        }
+        
         func orientationString(_ orientation: UIDeviceOrientation) -> String {
             switch orientation {
             case .portrait: return "Portrait"
@@ -447,7 +471,7 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
             @unknown default: return "Unknown"
             }
         }
-
+        
     }
     
     func addTarget(to view: UIView) {
@@ -547,28 +571,28 @@ class TargetView: UIView {
 }
 
 class FocusedView: UIView {
-    var cutout: CGRect?
-
-    init(cutout: CGRect?) {
+    var focusBox: CGRect?
+    
+    init(focus: CGRect?) {
         super.init(frame: .zero)
-        self.cutout = cutout
-        backgroundColor = UIColor.black.withAlphaComponent(0.6)
+        self.focusBox = focus
+        backgroundColor = UIColor.black.withAlphaComponent(0.3)
         isOpaque = false
     }
-
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
+    
     override func draw(_ rect: CGRect) {
         backgroundColor?.setFill()
         UIRectFill(rect)
-        guard let cutout = cutout else { return }
-
+        guard let cutout = focusBox else { return }
+        
         let path = UIBezierPath(rect: cutout)
         let intersection = rect.intersection(cutout)
         UIRectFill(intersection)
-
+        
         UIColor.clear.setFill()
         UIGraphicsGetCurrentContext()?.setBlendMode(.copy)
         path.fill()
