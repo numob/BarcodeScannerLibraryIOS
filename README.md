@@ -10,10 +10,11 @@
 
 A class that incorporates custom logic for selecting and returning barcodes recognized from `DataScannerViewController`.
 
-- **recognizedItem**: (from `DataScannerViewController` item)
-- **containsTarget**: A bool reference that is returned from this class on whether or not the recognized item includes the target (crosshair plus icon).
-- **isTargetVisible**: A bool reference that sets the target (center indicated by plus symbol) visible or not.
-- **focusedViewWidth** and **focusedViewHeight**: Set the dimensions of the focused view, which is a view that restricts the recognized items within the view; optional.
+- **Parameters:**
+  - `onRecognizedItem`: A callback function that handles the recognized item and whether it includes the target.
+  - `isTargetVisible`: A boolean that sets the target visible or not; optional and default true.
+  - `focusedViewWidth`: Sets the width of the focused view, which restricts the recognized items within the view; optional.
+  - `focusedViewHeight`: Sets the height of the focused view, which restricts the recognized items within the view; optional.
 
 ### Example:
 ```swift
