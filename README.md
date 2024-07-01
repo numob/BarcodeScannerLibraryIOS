@@ -8,6 +8,9 @@
 
 ## BarcodeScannerView Class
 
+### Privacy:  
+    - Library interface is public, all functions, and most properties accessible. 
+
 A class that incorporates custom logic for selecting and returning barcodes recognized from `DataScannerViewController`.
 
 - **Parameters:**
@@ -33,12 +36,7 @@ A class that incorporates custom logic for selecting and returning barcodes reco
             self.isInCenterOfView = isInCenterOfView
         }
     )
-
-  
 ```
-
-## Privacy:  
-    - Library interface is public, all functions, and most properties accessible. 
 
 ## Preview
 <img src="https://github.com/numob/BarcodeScannerLibraryIOS/assets/164918815/6d877515-9bbf-4189-a901-6f2b0821fcd5" alt="Screenshot 2024-06-24 at 1 44 24 PM" width="400"/>
