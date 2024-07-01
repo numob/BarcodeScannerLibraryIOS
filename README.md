@@ -14,7 +14,7 @@ A class that incorporates custom logic for selecting and returning barcodes reco
   - `onRecognizedItem`: A callback function that handles the recognized item and whether it includes the target. The callback provides two parameters:
     - `scannedCode`: The recognized item (e.g., barcode) from the DataScannerViewController.
     - `isInCenterOfView`: A boolean indicating whether the recognized item is within the specified focus area.
-  - `isTargetVisible`: A boolean that sets the target visible or not; optional and default true.
+  - `isCenterIconVisible`: A boolean that sets the maker in the center of the view visible or not; optional and default true.
   
 ### Example:
 ```swift
