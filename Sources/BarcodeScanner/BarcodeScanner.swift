@@ -1,60 +1,96 @@
 //
-//  DataScannerRepresentable.swift
-//  SymbolDetector
+//  BarCodeScannerView.swift
+//  BarcodeScanner
 //
 //  Created by Wei Chen on 6/17/24.
 //
 
 import SwiftUI
 import VisionKit
+import Vision
 import Foundation
 import UIKit
+import UniformTypeIdentifiers
+
 
 /// A class that incorporates custom logic to select and return barcodes recognized from DataScannerViewController.
 /// - Parameters:
-///   - onRecognizedItem: A callback function that handles the recognized item and whether it includes the target.
-///   - isTargetVisible: A boolean  that sets the target visible or not; optional and default true
-///   - focusedViewWidth: Sets the width of the focused view, which restricts the recognized items within the view; optional.
-///   - focusedViewHeight: Sets the height of the focused view, which restricts the recognized items within the view; optional.
+///   - didScannedCode: A callback function that handles the recognized item and whether it includes the target. The callback provides two parameters:
+///       - scannedCode: The recognized item (e.g., barcode) from the DataScannerViewController.
+///       - isInCenterOfView: A boolean indicating whether the recognized item is within the specified focus area.
+///   - isCenterIconVisible: A boolean that sets the target visible or not; optional and default true
+///   - restrictedAreaRect: A rect that determines the area on the view that can recognize bar codes, a rect of dimensions and is no coordinates (centered); optional
 /// Example:
 /// ```
+///BarcodeScannerView(
+///    didScannedCode: { scannedCode, isInCenterOfView in
+///        self.scannedCode = scannedCode
+///        self.isInCenterOfView = isInCenterOfView
+///    },
+///    isCenterIconVisible: false,
+///    restrictedArea: CGSize(width: 200, height: 200)
+///)
 /// BarcodeScannerView(
-///     onRecognizedItem: { recognizedItem, containsTarget in
-///         self.recognizedItem = recognizedItem
-///         self.containsTarget = containsTarget
-///     },
-///     isTargetVisible: false,
-///     focusedViewWidth: 200,
-///     focusedViewHeight: 200,
-/// )
-/// BarcodeScannerView(
-///     onRecognizedItem: { recognizedItem, containsTarget in
-///         self.recognizedItem = recognizedItem
-///         self.containsTarget = containsTarget
+///     didScannedCode: { scannedCode, isInCenterOfView in
+///         self.scannedCode = scannedCode
+///         self.isInCenterOfView = isInCenterOfView
 ///     }
 /// )
 /// ```
-/// Includes data labels for coordinates, dimensions, and recognized item data for debugging:
+/// Includes data labels for coordinates, dimensions, and recognized item data for debugging:44
 /// - displayOrientationLabel()
 /// - displayRecognizedItemCoordinates(items: items)
 /// - displayFrameCoords()
 /// - displayFocusDimensions()
 
 @MainActor
-struct BarcodeScannerView: UIViewControllerRepresentable {
-    var onRecognizedItem: (RecognizedItem?, Bool) -> Void
-    var isTargetVisible: Bool = true
-    var focusedViewWidth: CGFloat?
-    var focusedViewHeight: CGFloat?
+ public struct BarcodeScanner: UIViewControllerRepresentable {
+    var didScannedCode: (RecognizedItem?, Bool) -> Void
+    var isCenterIconVisible: Bool = true
+    var restrictedAreaSize: CGSize?
+    var focusedViewWidth: CGFloat? {
+        return restrictedAreaSize?.width
+    }
+    var focusedViewHeight: CGFloat? {
+        return restrictedAreaSize?.height
+    }
     var scannerViewController: DataScannerViewController = DataScannerViewController(
-        recognizedDataTypes: [.barcode()],
+        recognizedDataTypes: [.barcode(symbologies: [
+            .codabar,
+            .code39,
+            .code93,
+            .code128,
+            .ean8,
+            .ean13,
+            .gs1DataBar,
+            .gs1DataBarExpanded,
+            .gs1DataBarLimited,
+            .itf14,
+            .upce,
+            .aztec,
+            .dataMatrix,
+            .microPDF417,
+            .microQR,
+            .pdf417,
+            .qr
+        ])],
         qualityLevel: .balanced,
         recognizesMultipleItems: true,
-        isHighFrameRateTrackingEnabled: false,
+        isHighFrameRateTrackingEnabled: true,
         isHighlightingEnabled: true
     )
+     
+     public init(
+        didScannedCode: @escaping (RecognizedItem?, Bool) -> Void,
+        isCenterIconVisible: Bool = true,
+        restrictedAreaSize: CGSize? = nil
+    ) {
+         self.didScannedCode = didScannedCode
+         self.isCenterIconVisible = isCenterIconVisible
+         self.restrictedAreaSize = restrictedAreaSize
+     }
     
-    func addFocusedView(to view: UIView) {
+    func addRestrictedArea(to view: UIView) {
         let padding: CGFloat = 10.0
         let defaultWidth: CGFloat = view.bounds.width - 2 * padding
         let defaultHeight: CGFloat = view.bounds.height - 2 * padding
@@ -78,7 +114,7 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
         ])
     }
     
-    func makeUIViewController(context: Context) -> DataScannerViewController {
+    public func makeUIViewController(context: Context) -> DataScannerViewController {
         scannerViewController.delegate = context.coordinator
         
         do {
@@ -89,23 +125,24 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
         
         DispatchQueue.main.async {
             addTarget(to: scannerViewController.view)
-            addFocusedView(to: scannerViewController.view)
+            addRestrictedArea(to: scannerViewController.view)
             //context.coordinator.displayOrientationLabel()
             
         }
         
+        
         return scannerViewController
     }
     
-    func updateUIViewController(_ uiViewController: DataScannerViewController, context: Context) {
+    public func updateUIViewController(_ uiViewController: DataScannerViewController, context: Context) {
         // required function
         if let targetView = uiViewController.view.subviews.first(where: { $0 is TargetView }) {
-            targetView.isHidden = !isTargetVisible
+            targetView.isHidden = !isCenterIconVisible
         }
     }
     
-    func makeCoordinator() -> Coordinator {
-        return Coordinator(self, onRecognizedItem: onRecognizedItem)
+    public func makeCoordinator() -> Coordinator {
+        return Coordinator(self, onRecognizedItem: didScannedCode)
     }
     func displayCutoutDimensions() {
         guard let cutout = (scannerViewController.view.subviews.first { $0 is FocusedView } as? FocusedView)?.focusBox else { return }
@@ -123,15 +160,15 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
         scannerViewController.view.addSubview(label)
     }
     @MainActor
-    class Coordinator: NSObject, DataScannerViewControllerDelegate {
-        var parent: BarcodeScannerView
+    public class Coordinator: NSObject, DataScannerViewControllerDelegate {
+        var parent: BarcodeScanner
         var roundBoxMappings: [UUID: UIView] = [:]
         var coordinateLabels: [UUID: UILabel] = [:]
         var deviceOrientationLabel: UILabel?
         var onRecognizedItem: (RecognizedItem?, Bool) -> Void
-
         
-        init(_ parent: BarcodeScannerView, onRecognizedItem: @escaping (RecognizedItem?, Bool) -> Void) {
+        
+        init(_ parent: BarcodeScanner, onRecognizedItem: @escaping (RecognizedItem?, Bool) -> Void) {
             self.parent = parent
             self.onRecognizedItem = onRecognizedItem
             super.init()
@@ -143,21 +180,20 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
             NotificationCenter.default.removeObserver(self, name: UIDevice.orientationDidChangeNotification, object: nil)
         }
         
-        
-        func dataScanner(_ dataScanner: DataScannerViewController, didAdd addedItems: [RecognizedItem], allItems: [RecognizedItem]) {
+        public func dataScanner(_ dataScanner: DataScannerViewController, didAdd addedItems: [RecognizedItem], allItems: [RecognizedItem]) {
             processItems(items: allItems)
         }
         
-        func dataScanner(_ dataScanner: DataScannerViewController, didRemove removedItems: [RecognizedItem], allItems: [RecognizedItem]) {
+        public func dataScanner(_ dataScanner: DataScannerViewController, didRemove removedItems: [RecognizedItem], allItems: [RecognizedItem]) {
             processItems(items: allItems)
         }
         
-        func dataScanner(_ dataScanner: DataScannerViewController, didUpdate updatedItems: [RecognizedItem], allItems: [RecognizedItem]) {
+        public func dataScanner(_ dataScanner: DataScannerViewController, didUpdate updatedItems: [RecognizedItem], allItems: [RecognizedItem]) {
             processItems(items: allItems)
             
         }
         
-        func dataScanner(_ dataScanner: DataScannerViewController, didTapOn item: RecognizedItem) {
+        public func dataScanner(_ dataScanner: DataScannerViewController, didTapOn item: RecognizedItem) {
             processItem(item: item)
         }
         
@@ -240,7 +276,10 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
             return hypot(itemCenter.x - center.x, itemCenter.y - center.y)
         }
         
-        func processItem(item: RecognizedItem) {
+        func processItem(item: RecognizedItem?) {
+            // Will not run callback if nil
+            guard let item = item else { return }
+
             removeAllBorderedBoxes()
             removeAllCoordinateLabels()
             
@@ -253,14 +292,14 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
                 print("No items recognized")
             }
             
-            let containsTarget: Bool
+            let isinCenterOfView: Bool
             if parent.focusedViewWidth != nil && parent.focusedViewHeight != nil {
-                containsTarget = isTargetWithinItemBounds(item: item)
+                isinCenterOfView = isTargetWithinItemBounds(item: item)
             } else {
-                containsTarget = true
+                isinCenterOfView = true
             }
             
-            onRecognizedItem(item, containsTarget)
+            onRecognizedItem(item, isinCenterOfView)
         }
         
         func isTargetWithinItemBounds(item: RecognizedItem) -> Bool {
@@ -449,7 +488,20 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
             //displayFocusDimensions()
             updateFocusedViewBounds()
             
+        }
+        func updateFocusedViewBounds() {
+            guard let view = parent.scannerViewController.view, let focusedView = view.subviews.first(where: { $0 is FocusedView }) as? FocusedView else {
+                return
+            }
             
+            guard let width = parent.focusedViewWidth, let height = parent.focusedViewHeight else { return }
+            
+            let viewXPosition: CGFloat = (view.bounds.width - width) / 2
+            let viewYPosition: CGFloat = (view.bounds.height - height) / 2
+            let focusBox = CGRect(x: viewXPosition, y: viewYPosition, width: width, height: height)
+            
+            focusedView.focusBox = focusBox
+            focusedView.setNeedsDisplay()
         }
         
         func displayOrientationLabel() {
@@ -468,20 +520,6 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
             let deviceOrientation = UIDevice.current.orientation
             deviceOrientationLabel.text = "Device Orientation: \(orientationString(deviceOrientation))"
             deviceOrientationLabel.sizeToFit()
-        }
-        func updateFocusedViewBounds() {
-            guard let view = parent.scannerViewController.view, let focusedView = view.subviews.first(where: { $0 is FocusedView }) as? FocusedView else {
-                return
-            }
-            
-            guard let width = parent.focusedViewWidth, let height = parent.focusedViewHeight else { return }
-            
-            let viewXPosition: CGFloat = (view.bounds.width - width) / 2
-            let viewYPosition: CGFloat = (view.bounds.height - height) / 2
-            let focusBox = CGRect(x: viewXPosition, y: viewYPosition, width: width, height: height)
-            
-            focusedView.focusBox = focusBox
-            focusedView.setNeedsDisplay()
         }
         
         func orientationString(_ orientation: UIDeviceOrientation) -> String {
@@ -506,7 +544,7 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
                                                   width: targetSize,
                                                   height: targetSize))
         targetView.translatesAutoresizingMaskIntoConstraints = false
-        targetView.isHidden = !isTargetVisible
+        targetView.isHidden = !isCenterIconVisible
         view.addSubview(targetView)
         
         NSLayoutConstraint.activate([
@@ -517,6 +555,13 @@ struct BarcodeScannerView: UIViewControllerRepresentable {
         ])
     }
 }
+//TODO: hide when camera
+//    .onAppear{
+//
+//    }
+//    .onDisappear{
+//
+
 extension CGRect {
     func boundingBox() -> CGRect {
         return CGRect(
@@ -595,6 +640,7 @@ class TargetView: UIView {
     }
 }
 
+
 class FocusedView: UIView {
     var focusBox: CGRect?
     
@@ -623,4 +669,84 @@ class FocusedView: UIView {
         path.fill()
     }
 }
+
+public struct ImagePicker: UIViewControllerRepresentable {
+    @Environment(\.presentationMode) var presentationMode
+    @Binding var selectedImage: UIImage?
+    var sourceType: UIImagePickerController.SourceType
+    
+    public init(selectedImage: Binding<UIImage?>, sourceType: UIImagePickerController.SourceType) {
+        self._selectedImage = selectedImage
+        self.sourceType = sourceType
+    }
+    
+    public func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.delegate = context.coordinator
+        picker.sourceType = sourceType
+        return picker
+    }
+    
+    public func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+    
+    public func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    public class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
+        var parent: ImagePicker
+        
+        init(_ parent: ImagePicker) {
+            self.parent = parent
+        }
+        
+        public func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+            if let image = info[.originalImage] as? UIImage {
+                parent.selectedImage = image
+            }
+            parent.presentationMode.wrappedValue.dismiss()
+        }
+        
+        public func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            parent.presentationMode.wrappedValue.dismiss()
+        }
+    }
+}
+
+struct DocumentPickerView: UIViewControllerRepresentable {
+    @Environment(\.presentationMode) var presentationMode
+    var documentTypes: [UTType]
+    var onDocumentsPicked: ([URL]) -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
+        let picker = UIDocumentPickerViewController(forOpeningContentTypes: documentTypes)
+        picker.delegate = context.coordinator
+        picker.allowsMultipleSelection = false
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) {}
+
+    class Coordinator: NSObject, UIDocumentPickerDelegate {
+        var parent: DocumentPickerView
+
+        init(_ parent: DocumentPickerView) {
+            self.parent = parent
+        }
+
+        func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+            parent.onDocumentsPicked(urls)
+            parent.presentationMode.wrappedValue.dismiss()
+        }
+
+        func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+            parent.presentationMode.wrappedValue.dismiss()
+        }
+    }
+}
+
 
