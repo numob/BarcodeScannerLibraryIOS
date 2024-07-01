@@ -129,10 +129,20 @@ import UniformTypeIdentifiers
             //context.coordinator.displayOrientationLabel()
             
         }
-        
-        
+
         return scannerViewController
     }
+     public func startScanner(){
+         do{
+             try scannerViewController.startScanning()
+         } catch {
+             print("Failed start")
+         }
+         
+     }
+     public func stopScanner(){
+         scannerViewController.stopScanning()
+     }
     
     public func updateUIViewController(_ uiViewController: DataScannerViewController, context: Context) {
         // required function
@@ -555,13 +565,6 @@ import UniformTypeIdentifiers
         ])
     }
 }
-//TODO: hide when camera
-//    .onAppear{
-//
-//    }
-//    .onDisappear{
-//
-
 extension CGRect {
     func boundingBox() -> CGRect {
         return CGRect(
@@ -669,84 +672,4 @@ class FocusedView: UIView {
         path.fill()
     }
 }
-
-public struct ImagePicker: UIViewControllerRepresentable {
-    @Environment(\.presentationMode) var presentationMode
-    @Binding var selectedImage: UIImage?
-    var sourceType: UIImagePickerController.SourceType
-    
-    public init(selectedImage: Binding<UIImage?>, sourceType: UIImagePickerController.SourceType) {
-        self._selectedImage = selectedImage
-        self.sourceType = sourceType
-    }
-    
-    public func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
-        picker.delegate = context.coordinator
-        picker.sourceType = sourceType
-        return picker
-    }
-    
-    public func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-    
-    public func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-    
-    public class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
-        var parent: ImagePicker
-        
-        init(_ parent: ImagePicker) {
-            self.parent = parent
-        }
-        
-        public func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-            if let image = info[.originalImage] as? UIImage {
-                parent.selectedImage = image
-            }
-            parent.presentationMode.wrappedValue.dismiss()
-        }
-        
-        public func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            parent.presentationMode.wrappedValue.dismiss()
-        }
-    }
-}
-
-struct DocumentPickerView: UIViewControllerRepresentable {
-    @Environment(\.presentationMode) var presentationMode
-    var documentTypes: [UTType]
-    var onDocumentsPicked: ([URL]) -> Void
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-
-    func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
-        let picker = UIDocumentPickerViewController(forOpeningContentTypes: documentTypes)
-        picker.delegate = context.coordinator
-        picker.allowsMultipleSelection = false
-        return picker
-    }
-
-    func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) {}
-
-    class Coordinator: NSObject, UIDocumentPickerDelegate {
-        var parent: DocumentPickerView
-
-        init(_ parent: DocumentPickerView) {
-            self.parent = parent
-        }
-
-        func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-            parent.onDocumentsPicked(urls)
-            parent.presentationMode.wrappedValue.dismiss()
-        }
-
-        func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
-            parent.presentationMode.wrappedValue.dismiss()
-        }
-    }
-}
-
 
