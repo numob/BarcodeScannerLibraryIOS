@@ -37,7 +37,7 @@ A class that incorporates custom logic for selecting and returning barcodes reco
   
 ```
 
-### Privacy:  
+## Privacy:  
     - Library interface is public, all functions, and most properties accessible. 
 
 ## Preview
