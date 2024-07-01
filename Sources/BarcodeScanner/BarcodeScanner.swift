@@ -114,7 +114,7 @@ import UniformTypeIdentifiers
         ])
     }
     
-    public func makeUIViewController(context: Context) -> DataScannerViewController {
+    public func makeUIViewController(context: Context) -> DataScannerViewController {  
         scannerViewController.delegate = context.coordinator
         
         do {
@@ -672,4 +672,5 @@ class FocusedView: UIView {
         path.fill()
     }
 }
+
 

@@ -11,11 +11,11 @@
 A class that incorporates custom logic for selecting and returning barcodes recognized from `DataScannerViewController`.
 
 - **Parameters:**
-  - `onRecognizedItem`: A callback function that handles the recognized item and whether it includes the target.
+  - `onRecognizedItem`: A callback function that handles the recognized item and whether it includes the target. The callback provides two parameters:
+    - `scannedCode`: The recognized item (e.g., barcode) from the DataScannerViewController.
+    - `isInCenterOfView`: A boolean indicating whether the recognized item is within the specified focus area.
   - `isTargetVisible`: A boolean that sets the target visible or not; optional and default true.
-  - `focusedViewWidth`: Sets the width of the focused view, which restricts the recognized items within the view; optional.
-  - `focusedViewHeight`: Sets the height of the focused view, which restricts the recognized items within the view; optional.
-
+  
 ### Example:
 ```swift
     BarcodeScannerView(
@@ -34,7 +34,12 @@ A class that incorporates custom logic for selecting and returning barcodes reco
         }
     )
 
+  
 ```
+
+### Privacy:  
+    - Library interface is public, all functions, and most properties accessible. 
+
 ## Preview
 <img src="https://github.com/numob/BarcodeScannerLibraryIOS/assets/164918815/6d877515-9bbf-4189-a901-6f2b0821fcd5" alt="Screenshot 2024-06-24 at 1 44 24 PM" width="400"/>
 
