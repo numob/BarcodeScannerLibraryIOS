@@ -108,7 +108,7 @@ public struct BarcodeScannerView<Label: View>: View {
             Button(NSLocalizedString("Select File", comment: "")) {
                 showingDocumentPicker = true
             }
-            Button(NSLocalizedString("Cancel", comment: ""), role: .cancel) {}
+            Button(NSLocalizedString("Cancel", comment: ""), role: .destructive) {}
         }
         .sheet(isPresented: $showingImagePicker) {
             ImagePicker { selectedImage in
