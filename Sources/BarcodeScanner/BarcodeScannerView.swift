@@ -83,7 +83,7 @@ public struct BarcodeScannerView<Label: View>: View {
     public var body: some View {
         ZStack() {
             if shouldHideCamera{
-                VStack{}
+                EmptyView()
             }
             else{
                 PreviewBarcodeScanner(

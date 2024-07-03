@@ -48,7 +48,6 @@ struct PreviewBarcodeScanner: UIViewControllerRepresentable {
     var isCenterIconVisible: Bool
     var restrictedAreaSize: CGSize?
     var didScannedCode: (RecognizedItem, Bool) -> Void
-    
     var focusedViewWidth: CGFloat? { restrictedAreaSize?.width }
     var focusedViewHeight: CGFloat? { restrictedAreaSize?.height }
     var scannerViewController: DataScannerViewController = DataScannerViewController(
@@ -78,7 +77,7 @@ struct PreviewBarcodeScanner: UIViewControllerRepresentable {
     )
         
     func addRestrictedArea(to view: UIView) {
-        let padding: CGFloat = 10.0
+        let padding: CGFloat = restrictedAreaSize == nil ? 0 : 10.0
         let defaultWidth: CGFloat = view.bounds.width - 2 * padding
         let defaultHeight: CGFloat = view.bounds.height - 2 * padding
         
@@ -114,7 +113,6 @@ struct PreviewBarcodeScanner: UIViewControllerRepresentable {
             addTarget(to: scannerViewController.view)
             addRestrictedArea(to: scannerViewController.view)
             //context.coordinator.displayOrientationLabel()
-            
         }
         
         return scannerViewController
