@@ -7,11 +7,7 @@
 5. Select the package products you need and click `Finish`.
 
 ## BarcodeScannerView Class
-
-### Privacy:  
-- Library interface is public
-
-A class that incorporates custom logic for selecting and returning barcodes recognized from `DataScannerViewController`.
+A SwiftUI class that encapsualtes functionality from `DataScannerViewController` `VNBarcodeObservation` APIs using custom logic for selecting and returning barcodes.
 
 - **Parameters:**
   - `autoscan`: A boolean indicating whether to automatically process codes from capture types (photo, file). Optional and defaults to true.
@@ -28,6 +24,15 @@ A class that incorporates custom logic for selecting and returning barcodes reco
 
 ### Example:
 ```swift
+
+// minimum configuration
+BarcodeScannerView(
+    didScannedCodes: { capture, barcodes in
+        self.captureType = capture
+        self.barcodes = barcodes
+    }
+)
+// full configuration
 BarcodeScannerView(
     autoscan: true,
     restrictedArea: CGSize(width: 200, height: 200),
@@ -45,6 +50,9 @@ BarcodeScannerView(
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
 }
 ```
+### Privacy:  
+- Library interface is public
+
 
 ## Preview
 <img src="https://github.com/numob/BarcodeScannerLibraryIOS/assets/164918815/6d877515-9bbf-4189-a901-6f2b0821fcd5" alt="Screenshot 2024-06-24 at 1 44 24 PM" width="400"/>
