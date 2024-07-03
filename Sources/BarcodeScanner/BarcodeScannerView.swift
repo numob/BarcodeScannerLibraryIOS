@@ -59,6 +59,7 @@ public struct BarcodeScannerView<Label: View>: View {
     private let imageChooseLabelAlignment: Alignment
     private let restrictedArea: CGSize?
     private let returnMultipleSymbolsForLocalImage: Bool
+    private let isHighlightingCameraCode: Bool
     
     private var shouldHideCamera: Bool {
         showingImagePicker || showingDocumentPicker || showingImageSheet != nil || isProcessingImage
@@ -67,6 +68,7 @@ public struct BarcodeScannerView<Label: View>: View {
     public init(
         restrictedArea: CGSize? = nil,
         isCenterIconVisible: Bool = true,
+        isHighlightingCameraCode: Bool = false,
         imageChooseLabelAlignment: Alignment = .topTrailing,
         returnMultipleSymbolsForLocalImage: Bool = true,
         didScannedCodes: @escaping (CaptureSource, [Barcode]) -> Void,
@@ -74,6 +76,7 @@ public struct BarcodeScannerView<Label: View>: View {
     ) {
         self.restrictedArea = restrictedArea
         self.isCenterIconVisible = isCenterIconVisible
+        self.isHighlightingCameraCode = isHighlightingCameraCode
         self.label = label
         self.didScannedCodes = didScannedCodes
         self.imageChooseLabelAlignment = imageChooseLabelAlignment
@@ -88,7 +91,8 @@ public struct BarcodeScannerView<Label: View>: View {
             else{
                 PreviewBarcodeScanner(
                     isCenterIconVisible: isCenterIconVisible,
-                    restrictedAreaSize: restrictedArea
+                    restrictedAreaSize: restrictedArea,
+                    isShowingHighlighting: isHighlightingCameraCode
                 ) { scannedCode, isInCenterOfView in
                     didScannedCodes(.camera(isInCenter: isInCenterOfView), .init([scannedCode].flatMap(Barcode.init(item:))))
                 }

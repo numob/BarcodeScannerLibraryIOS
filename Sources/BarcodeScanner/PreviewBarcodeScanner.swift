@@ -47,6 +47,7 @@ import UniformTypeIdentifiers
 struct PreviewBarcodeScanner: UIViewControllerRepresentable {
     var isCenterIconVisible: Bool
     var restrictedAreaSize: CGSize?
+    var isShowingHighlighting: Bool
     var didScannedCode: (RecognizedItem, Bool) -> Void
     var focusedViewWidth: CGFloat? { restrictedAreaSize?.width }
     var focusedViewHeight: CGFloat? { restrictedAreaSize?.height }
@@ -275,12 +276,16 @@ struct PreviewBarcodeScanner: UIViewControllerRepresentable {
             removeAllBorderedBoxes()
             removeAllCoordinateLabels()
             
-            let frame = calculateSelectedFrame(item: item)
-            // displaySelectedCoords(frame: frame)
-            switch item {
-            case .barcode: addSelectionFrame(frame: frame, text: nil, item: item)
-            default: break // print("No items recognized")
+            if self.parent.isShowingHighlighting{
+                let frame = calculateSelectedFrame(item: item)
+                // displaySelectedCoords(frame: frame)
+                switch item {
+                case .barcode:
+                addSelectionFrame(frame: frame, text: nil, item: item)
+                default: break // print("No items recognized")
+                }
             }
+          
             
             let isInCenterOfView = isTargetWithinItemBounds(item: item)
             
