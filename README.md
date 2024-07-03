@@ -7,7 +7,7 @@
 5. Select the package products you need and click `Finish`.
 
 ## BarcodeScannerView Class
-A SwiftUI class that encapsualtes functionality from `DataScannerViewController` `VNBarcodeObservation` APIs using custom logic for selecting and returning barcodes.
+A SwiftUI class that encapsulates functionality from `DataScannerViewController` `VNBarcodeObservation` APIs using custom logic for selecting and returning barcodes.
 
 - **Parameters:**
   - `autoscan`: A boolean indicating whether to automatically process codes from capture types (photo, file). Optional and defaults to true.
