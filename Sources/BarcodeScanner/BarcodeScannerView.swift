@@ -101,14 +101,14 @@ public struct BarcodeScannerView<Label: View>: View {
         }
         .background(.background)
         .animation(.easeInOut(duration: 0.2), value: shouldHideCamera)
-        .confirmationDialog("Choose", isPresented: $isSelectingInput, titleVisibility: .visible) {
-            Button("Select Photo") {
+        .confirmationDialog(NSLocalizedString("Select Media for Scanning", comment: ""), isPresented: $isSelectingInput, titleVisibility: .visible) {
+            Button(NSLocalizedString("Select Photo", comment: "")) {
                 showingImagePicker = true
             }
-            Button("Select File") {
+            Button(NSLocalizedString("Select File", comment: "")) {
                 showingDocumentPicker = true
             }
-            Button("Cancel", role: .cancel) {}
+            Button(NSLocalizedString("Cancel", comment: ""), role: .cancel) {}
         }
         .sheet(isPresented: $showingImagePicker) {
             ImagePicker { selectedImage in
@@ -302,10 +302,10 @@ struct SelectBarcodeFromImage: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-            Button {
+             Button {
                 dismiss()
             } label: {
-                Text("Cancel")
+                Text(NSLocalizedString("Cancel", comment: ""))
                     .padding(.leading)
             }
 
@@ -316,11 +316,11 @@ struct SelectBarcodeFromImage: View {
             }
 
             let text: LocalizedStringKey = if state.foundCodes.isEmpty {
-                "No codes recognized"
+                LocalizedStringKey("No codes recognized.")
             } else if autoscan {
-                "All recognized codes will be added automatically."
+                LocalizedStringKey("All recognized codes will be added automatically.")
             } else {
-                "Tap on a recognized code to select it"
+                LocalizedStringKey("Tap on a recognized code to select it.")
             }
 
             HStack {
@@ -337,15 +337,15 @@ struct SelectBarcodeFromImage: View {
         .padding()
         .alert(isPresented: $showingConfirmationDialog) {
             Alert(
-                title: Text("Confirm Selection"),
-                message: Text("Do you want to select this code?"),
-                primaryButton: .default(Text("Yes")) {
+                title: Text(NSLocalizedString("Confirm Selection", comment: "")),
+                message: Text(NSLocalizedString("Do you want to select this code?", comment: "")),
+                primaryButton: .default(Text(NSLocalizedString("Yes", comment: ""))) {
                     if let selectedCode {
                        didScannedCodes(.file, .init([selectedCode].map(Barcode.init(observation:))))
                     }
                     showingConfirmationDialog = false
                 },
-                secondaryButton: .cancel(Text("No")) {
+                secondaryButton: .cancel(Text(NSLocalizedString("No", comment: ""))) {
                     selectedCode = nil
                     showingConfirmationDialog = false
                 }

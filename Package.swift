@@ -5,6 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "BarcodeScanner",
+    defaultLocalization: "en",
     platforms: [
            .iOS(.v17)
        ],
