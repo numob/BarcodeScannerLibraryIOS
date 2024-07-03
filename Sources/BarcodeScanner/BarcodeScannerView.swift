@@ -55,52 +55,54 @@ public struct BarcodeScannerView<Label: View>: View {
     @State private var isProcessingImage = false
     
     private let label: () -> Label
-    private let didScannedCodes: (CaptureType, Set<Barcode>) -> Void
-    
-    private let restrictedArea: CGSize
-    private let autoscan: Bool
+    private let didScannedCodes: (CaptureSource, [Barcode]) -> Void
+    private let imageChooseLabelAlignment: Alignment
+    private let restrictedArea: CGSize?
+    private let returnMultipleSymbolsForLocalImage: Bool
     
     private var shouldHideCamera: Bool {
         showingImagePicker || showingDocumentPicker || showingImageSheet != nil || isProcessingImage
     }
     
     public init(
-        autoscan: Bool = true,
-        restrictedArea: CGSize = . init(width: 200, height: 200),
+        restrictedArea: CGSize? = nil,
         isCenterIconVisible: Bool = true,
-        alignment: Alignment = .bottom,
-        didScannedCodes: @escaping (CaptureType, Set<Barcode>) -> Void,
+        imageChooseLabelAlignment: Alignment = .topTrailing,
+        returnMultipleSymbolsForLocalImage: Bool = true,
+        didScannedCodes: @escaping (CaptureSource, [Barcode]) -> Void,
         @ViewBuilder label: @escaping () -> Label
     ) {
-        self.autoscan = autoscan
         self.restrictedArea = restrictedArea
         self.isCenterIconVisible = isCenterIconVisible
         self.label = label
         self.didScannedCodes = didScannedCodes
+        self.imageChooseLabelAlignment = imageChooseLabelAlignment
+        self.returnMultipleSymbolsForLocalImage = returnMultipleSymbolsForLocalImage
     }
     
     public var body: some View {
-        ZStack {
-            PreviewBarcodeScanner(
-                isCenterIconVisible: isCenterIconVisible,
-                restrictedAreaSize: restrictedArea
-            ) { scannedCode, isInCenterOfView in
-                didScannedCodes(.camera(isInCenter: isInCenterOfView), .init([scannedCode].flatMap(Barcode.init(item:))))
+        ZStack() {
+            if shouldHideCamera{
+                VStack{}
             }
-            .opacity(shouldHideCamera ? 0.0 : 1.0)
-            .ignoresSafeArea()
-            
-            if shouldHideCamera {
-                ContentUnavailableView("Camera Disabled", systemImage: "camera")
-            }
-            
-            label()
-                .onTapGesture {
-                    isSelectingInput = true
+            else{
+                PreviewBarcodeScanner(
+                    isCenterIconVisible: isCenterIconVisible,
+                    restrictedAreaSize: restrictedArea
+                ) { scannedCode, isInCenterOfView in
+                    didScannedCodes(.camera(isInCenter: isInCenterOfView), .init([scannedCode].flatMap(Barcode.init(item:))))
                 }
+                .overlay(alignment: imageChooseLabelAlignment) {
+                    label()
+                        .onTapGesture {
+                            isSelectingInput = true
+                        }
+                }
+            }
+    
         }
         .background(.background)
-        .animation(.easeInOut(duration: 0.2), value: shouldHideCamera)
+        //.animation(.easeInOut(duration: 0.2), value: shouldHideCamera)
         .confirmationDialog(NSLocalizedString("Select Media for Scanning", comment: ""), isPresented: $isSelectingInput, titleVisibility: .visible) {
             Button(NSLocalizedString("Select Photo", comment: "")) {
                 showingImagePicker = true
@@ -113,7 +115,6 @@ public struct BarcodeScannerView<Label: View>: View {
             ImagePicker { selectedImage in
                 loadImage(image: selectedImage)
             }
-            .ignoresSafeArea()
         }
         .fileImporter(isPresented: $showingDocumentPicker, allowedContentTypes: [.image, .pdf], allowsMultipleSelection: false) { result in
             if let url = try? result.get().first {
@@ -121,7 +122,7 @@ public struct BarcodeScannerView<Label: View>: View {
             }
         }
         .sheet(item: $showingImageSheet) { state in
-            SelectBarcodeFromImage(state: state, autoscan: autoscan, didScannedCodes: didScannedCodes)
+            SelectBarcodeFromImage(state: state, autoscan: returnMultipleSymbolsForLocalImage, didScannedCodes: didScannedCodes)
         }
     }
         
@@ -292,9 +293,9 @@ public struct BarcodeScannerView<Label: View>: View {
 struct SelectBarcodeFromImage: View {
     let state: ImageBarcodeData
     let autoscan: Bool
-    let didScannedCodes: (CaptureType, Set<Barcode>) -> Void
+    let didScannedCodes: (CaptureSource, [Barcode]) -> Void
     
-    @State private var showingConfirmationDialog = false
+    //@State private var showingConfirmationDialog = false
     @State private var selectedCode: VNBarcodeObservation?
     
     @Environment(\.dismiss) private var dismiss
@@ -334,22 +335,22 @@ struct SelectBarcodeFromImage: View {
             .padding(.bottom)
         }
         .padding()
-        .alert(isPresented: $showingConfirmationDialog) {
-            Alert(
-                title: Text(NSLocalizedString("Confirm Selection", comment: "")),
-                message: Text(NSLocalizedString("Do you want to select this code?", comment: "")),
-                primaryButton: .default(Text(NSLocalizedString("Yes", comment: ""))) {
-                    if let selectedCode {
-                       didScannedCodes(.file, .init([selectedCode].map(Barcode.init(observation:))))
-                    }
-                    showingConfirmationDialog = false
-                },
-                secondaryButton: .cancel(Text(NSLocalizedString("No", comment: ""))) {
-                    selectedCode = nil
-                    showingConfirmationDialog = false
-                }
-            )
-        }
+//        .alert(isPresented: $showingConfirmationDialog) {
+//            Alert(
+//                title: Text(NSLocalizedString("Confirm Selection", comment: "")),
+//                message: Text(NSLocalizedString("Do you want to select this code?", comment: "")),
+//                primaryButton: .default(Text(NSLocalizedString("Yes", comment: ""))) {
+//                    if let selectedCode {
+//                       didScannedCodes(.file, .init([selectedCode].map(Barcode.init(observation:))))
+//                    }
+//                    showingConfirmationDialog = false
+//                },
+//                secondaryButton: .cancel(Text(NSLocalizedString("No", comment: ""))) {
+//                    selectedCode = nil
+//                    showingConfirmationDialog = false
+//                }
+//            )
+//        }
         .onAppear {
             // if autoscan is on, return all codes
             if autoscan {
@@ -403,7 +404,6 @@ struct SelectBarcodeFromImage: View {
                         .onTapGesture {
                             guard !autoscan else { return }
                             selectedCode = code
-                            showingConfirmationDialog = true
                         }
                     }
                 }

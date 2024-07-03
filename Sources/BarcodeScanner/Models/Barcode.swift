@@ -9,7 +9,7 @@ import Foundation
 import VisionKit
 import Vision
 
-public enum CaptureType {
+public enum CaptureSource {
     case camera(isInCenter: Bool)
     case file
 }
@@ -21,19 +21,17 @@ public enum BarcodeSymbology: Hashable {
 }
 
 /// Barcode is a model that contains information about a scanned code.
-public struct Barcode: Hashable, Identifiable {
+public struct Barcode: Identifiable {
     public let id: UUID
     public let payloadString: String?
     public let symbology: BarcodeSymbology
-//    public let scannedCode: RecognizedItem?
-//    public let processedCode: VNBarcodeObservation?
+    public let recognizedItemCamera: RecognizedItem?
+    public var recognizedItemImage: VNBarcodeObservation? = nil
     
     /// Initializes a Barcode from a RecognizedItem.
     /// - Parameter item: The recognized item, which can be either text or a barcode.
     public init(item: RecognizedItem) {
-//        self.scannedCode = item
-//        self.processedCode = nil
-        
+        self.recognizedItemCamera = item
         switch item {
         case .text(let text):
             self.id = text.id
@@ -49,8 +47,8 @@ public struct Barcode: Hashable, Identifiable {
     /// Initializes a Barcode from a VNBarcodeObservation.
     /// - Parameter observation: The VNBarcodeObservation containing the barcode information.
     public init(observation: VNBarcodeObservation) {
-//        self.scannedCode = nil
-//        self.processedCode = observation
+        self.recognizedItemImage = observation
+        self.recognizedItemCamera = nil
         self.id = observation.uuid
         self.payloadString = observation.payloadStringValue
         self.symbology = .known(observation.symbology)
