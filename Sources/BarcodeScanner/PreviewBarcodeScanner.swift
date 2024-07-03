@@ -282,15 +282,11 @@ struct PreviewBarcodeScanner: UIViewControllerRepresentable {
             default: break // print("No items recognized")
             }
             
-            let isinCenterOfView: Bool = if parent.focusedViewWidth != nil && parent.focusedViewHeight != nil {
-                isTargetWithinItemBounds(item: item)
-            } else {
-                true
-            }
+            let isInCenterOfView = isTargetWithinItemBounds(item: item)
             
             onRecognizedItem(
                 item, 
-                isinCenterOfView
+                isInCenterOfView        
             )
         }
         
