@@ -59,12 +59,10 @@ BarcodeScannerView(
 ### Privacy:  
 - BarcodeScannerView is public.
 
-
-
 ## Preview
 <div style="display: flex; gap: 10px;">
-    <img src="https://github.com/numob/BarcodeScannerLibraryIOS/assets/164918815/d2fa023c-974d-430c-a073-214692c8b531" alt="Screenshot 2024-07-03 at 1 12 14 AM" height="400"/>
-    <img src="https://github.com/numob/BarcodeScannerLibraryIOS/assets/164918815/7a2e1f43-41f1-4379-883b-82f2f84cb67f" alt="IMG_5097" height="400"/>
+    <img src="https://github.com/numob/BarcodeScannerLibraryIOS/assets/164918815/59f6cd46-c713-438f-b8b1-9a260a5297cf" alt="IMG_0026" height="400"/>
+    <img src="https://github.com/numob/BarcodeScannerLibraryIOS/assets/164918815/eb4540a4-5948-43cd-bf4c-0d6ada2e6f7f" alt="IMG_0022" height="400"/>
 </div>
 
 
