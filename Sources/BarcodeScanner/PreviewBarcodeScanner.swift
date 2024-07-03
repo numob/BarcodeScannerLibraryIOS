@@ -45,17 +45,12 @@ import UniformTypeIdentifiers
 
 @MainActor
 struct PreviewBarcodeScanner: UIViewControllerRepresentable {
-    @Binding var scan: Bool
-    
-    var didScannedCode: (RecognizedItem, Bool) -> Void
-    var isCenterIconVisible: Bool = true
+    var isCenterIconVisible: Bool
     var restrictedAreaSize: CGSize?
-    var focusedViewWidth: CGFloat? {
-        return restrictedAreaSize?.width
-    }
-    var focusedViewHeight: CGFloat? {
-        return restrictedAreaSize?.height
-    }
+    var didScannedCode: (RecognizedItem, Bool) -> Void
+    
+    var focusedViewWidth: CGFloat? { restrictedAreaSize?.width }
+    var focusedViewHeight: CGFloat? { restrictedAreaSize?.height }
     var scannerViewController: DataScannerViewController = DataScannerViewController(
         recognizedDataTypes: [.barcode(symbologies: [
             .codabar,
@@ -81,19 +76,7 @@ struct PreviewBarcodeScanner: UIViewControllerRepresentable {
         isHighFrameRateTrackingEnabled: true,
         isHighlightingEnabled: true
     )
-    
-    public init(
-        scan: Binding<Bool>,
-        isCenterIconVisible: Bool = true,
-        restrictedAreaSize: CGSize? = nil,
-        didScannedCode: @escaping (RecognizedItem, Bool) -> Void
-    ) {
-        self._scan = scan
-        self.didScannedCode = didScannedCode
-        self.isCenterIconVisible = isCenterIconVisible
-        self.restrictedAreaSize = restrictedAreaSize
-    }
-    
+        
     func addRestrictedArea(to view: UIView) {
         let padding: CGFloat = 10.0
         let defaultWidth: CGFloat = view.bounds.width - 2 * padding
@@ -137,7 +120,7 @@ struct PreviewBarcodeScanner: UIViewControllerRepresentable {
         return scannerViewController
     }
     
-    func startScanner(){
+    private func startScanner(){
         do{
             try scannerViewController.startScanning()
         } catch {
@@ -146,7 +129,7 @@ struct PreviewBarcodeScanner: UIViewControllerRepresentable {
         
     }
     
-    func stopScanner(){
+    private func stopScanner(){
         scannerViewController.stopScanning()
     }
     
@@ -154,12 +137,6 @@ struct PreviewBarcodeScanner: UIViewControllerRepresentable {
         // required function
         if let targetView = uiViewController.view.subviews.first(where: { $0 is TargetView }) {
             targetView.isHidden = !isCenterIconVisible
-        }
-        
-        if scan, !scannerViewController.isScanning {
-            startScanner()
-        } else if !scan, scannerViewController.isScanning {
-            stopScanner()
         }
     }
     
@@ -303,11 +280,8 @@ struct PreviewBarcodeScanner: UIViewControllerRepresentable {
             let frame = calculateSelectedFrame(item: item)
             // displaySelectedCoords(frame: frame)
             switch item {
-            case .barcode:
-                //addSelectionFrame(frame: frame, text: nil, item: item)
-                print("Highlight Disabled")
-            default:
-                print("No items recognized")
+            case .barcode: addSelectionFrame(frame: frame, text: nil, item: item)
+            default: break // print("No items recognized")
             }
             
             let isinCenterOfView: Bool = if parent.focusedViewWidth != nil && parent.focusedViewHeight != nil {

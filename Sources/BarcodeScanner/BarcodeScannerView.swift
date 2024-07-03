@@ -17,20 +17,21 @@ import UIKit
 /// - Parameters:
 ///   - autoscan: A boolean indicating whether to automatically process codes from capture types (photo, file). Optional and defaults to true.
 ///   - restrictedArea: A CGSize that determines the area on the view that can recognize barcodes, centered in the view. Optional and defaults to CGSize(width: 200, height: 200).
+///   - isCenterIconVisible: A boolean that determines if the icon indicating the center of the view shows or not. Optional and defaults to true.
 ///   - alignment: The alignment of the content within the view. Optional and defaults to .bottom.
-/// - didScannedCodes: A callback function that handles the recognized barcodes and the capture type. The callback provides two parameters:
+///   - didScannedCodes: A callback function that handles the recognized barcodes and the capture type. The callback provides two parameters:
 ///       - capture: The capture type, which indicates the source of the barcode capture (camera or file) and additional information such as whether the barcode is in the center of the view.
 ///       - barcodes: An array of `Barcode` objects recognized from the DataScannerViewController. The object contains the following properties:
+///           - id: A UUID representing the unique identifier of the barcode.
 ///           - payloadString: The string representation of the barcode's payload.
 ///           - symbology: The symbology type of the barcode, which can be either a known symbology or unknown.
-///           - scannedCode: The raw `RecognizedItem` from DataScannerViewController, if available.
-///           - processedCode: The `VNBarcodeObservation` from Vision, if available.
-///   - label: A view builder that provides allows for custom modifiers for the media button displayed on the BarCodeScannerView
+///   - label: A view builder that provides custom modifiers for the media button displayed on the BarCodeScannerView
 /// - Example:
 /// ```
 /// BarcodeScannerView(
 ///     autoscan: true,
 ///     restrictedArea: CGSize(width: 200, height: 200),
+///     isCenterIconVisible = false
 ///     alignment: .bottom,
 ///     didScannedCodes: { capture, barcodes in
 ///         self.captureType = capture
@@ -44,68 +45,62 @@ import UIKit
 ///         .cornerRadius(10)
 ///         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
 /// }
-///
-///
 /// ```
-
-
-struct ImageBarcodeData: Hashable, Identifiable {
-    public var id: Int { self.hashValue }
-    
-    let image: UIImage
-    let foundCodes: [VNBarcodeObservation]
-}
-
 public struct BarcodeScannerView<Label: View>: View {
+    @State public var isCenterIconVisible = true
     @State private var showingImagePicker = false
     @State private var showingDocumentPicker = false
     @State private var isSelectingInput = false
-    @State private var selectedCode: VNBarcodeObservation?
-    @State private var showingConfirmationDialog = false
     @State private var showingImageSheet: ImageBarcodeData?
     @State private var isProcessingImage = false
-    @State private var allowsScanning = true
     
     private let label: () -> Label
-    private let didScannedCodes: (CaptureType, [Barcode]) -> Void
+    private let didScannedCodes: (CaptureType, Set<Barcode>) -> Void
     
-    private let alignment: Alignment
     private let restrictedArea: CGSize
     private let autoscan: Bool
     
-    private var shouldStopScanning: Bool {
-        showingImagePicker || showingDocumentPicker || showingConfirmationDialog || showingImageSheet != nil || isProcessingImage
+    private var shouldHideCamera: Bool {
+        showingImagePicker || showingDocumentPicker || showingImageSheet != nil || isProcessingImage
     }
     
     public init(
         autoscan: Bool = true,
         restrictedArea: CGSize = . init(width: 200, height: 200),
+        isCenterIconVisible: Bool = true,
         alignment: Alignment = .bottom,
-        didScannedCodes: @escaping (CaptureType, [Barcode]) -> Void,
+        didScannedCodes: @escaping (CaptureType, Set<Barcode>) -> Void,
         @ViewBuilder label: @escaping () -> Label
     ) {
         self.autoscan = autoscan
         self.restrictedArea = restrictedArea
-        self.alignment = alignment
+        self.isCenterIconVisible = isCenterIconVisible
         self.label = label
         self.didScannedCodes = didScannedCodes
     }
     
     public var body: some View {
-        ZStack(alignment: alignment) {
+        ZStack {
             PreviewBarcodeScanner(
-                scan: $allowsScanning,
+                isCenterIconVisible: isCenterIconVisible,
                 restrictedAreaSize: restrictedArea
             ) { scannedCode, isInCenterOfView in
-                didScannedCodes(.camera(isInCenter: isInCenterOfView), [scannedCode].map(Barcode.init(item:)))
+                didScannedCodes(.camera(isInCenter: isInCenterOfView), .init([scannedCode].flatMap(Barcode.init(item:))))
             }
+            .opacity(shouldHideCamera ? 0.0 : 1.0)
             .ignoresSafeArea()
+            
+            if shouldHideCamera {
+                ContentUnavailableView("Camera Disabled", systemImage: "camera")
+            }
             
             label()
                 .onTapGesture {
                     isSelectingInput = true
                 }
         }
+        .background(.background)
+        .animation(.easeInOut(duration: 0.2), value: shouldHideCamera)
         .confirmationDialog("Choose", isPresented: $isSelectingInput, titleVisibility: .visible) {
             Button("Select Photo") {
                 showingImagePicker = true
@@ -121,127 +116,16 @@ public struct BarcodeScannerView<Label: View>: View {
             }
             .ignoresSafeArea()
         }
-        .sheet(isPresented: $showingDocumentPicker) {
-            DocumentPicker { url in
+        .fileImporter(isPresented: $showingDocumentPicker, allowedContentTypes: [.image, .pdf], allowsMultipleSelection: false) { result in
+            if let url = try? result.get().first {
                 loadDocument(documentURL: url)
             }
-            .ignoresSafeArea()
         }
         .sheet(item: $showingImageSheet) { state in
-            VStack {
-                Button {
-                    showingImageSheet = nil
-                }label:{
-                    Image(systemName: "chevron.down")
-                        .font(.caption)
-                        .padding()
-                }
-                GeometryReader { geometry in
-                    renderImageWithOverlay(state, geometry: geometry)
-                }
-                .alert(isPresented: $showingConfirmationDialog) {
-                    Alert(
-                        title: Text("Confirm Selection"),
-                        message: Text("Do you want to select this code?"),
-                        primaryButton: .default(Text("Yes")) {
-                            if let selectedCode {
-                                didScannedCodes(.file, [selectedCode].map(Barcode.init(observation:)))
-                            }
-                        },
-                        secondaryButton: .cancel(Text("No")) {
-                            showingConfirmationDialog = false
-                            selectedCode = nil
-                        }
-                    )
-                }
-                
-                let text: LocalizedStringKey = if state.foundCodes.isEmpty {
-                    "No codes are recognized"
-                }
-                else if autoscan{
-                    "All recognized codes will be added automatically."
-
-                }
-                else {
-                    "Tap on a recognized code to select it"
-                }
-                
-                
-                HStack {
-                    if autoscan {
-                        ProgressView()
-                    }
-                    
-                    Text(text)
-                        .font(.caption)
-                        .padding()
-                }
-            }
-            .padding()
-            .onAppear {
-                // if autoscan is on, return all codes
-                if autoscan {
-                    didScannedCodes(.file, state.foundCodes.map(Barcode.init(observation:)))
-                }
-            }
-            .onChange(of: shouldStopScanning) { oldValue, newValue in
-                allowsScanning = !newValue
-            }
+            SelectBarcodeFromImage(state: state, autoscan: autoscan, didScannedCodes: didScannedCodes)
         }
     }
-    
-    private func renderImageWithOverlay(_ state: ImageBarcodeData, geometry: GeometryProxy) -> some View {
-        Image(uiImage: state.image)
-            .resizable()
-            .scaledToFit()
-            .overlay(
-                GeometryReader { geometry in
-                    let imageSize = geometry.size
-                    let imageWidth = imageSize.width
-                    let imageHeight = imageSize.height
-                    ForEach(state.foundCodes, id: \.uuid) { code in
-                        Path { path in
-                            let topLeft = CGPoint(
-                                x: code.topLeft.x * imageWidth,
-                                y: code.topLeft.y * imageHeight
-                            ).translateCoords(using: imageHeight)
-                            
-                            let topRight = CGPoint(
-                                x: code.topRight.x * imageWidth,
-                                y: code.topRight.y * imageHeight
-                            ).translateCoords(using: imageHeight)
-                            
-                            let bottomRight = CGPoint(
-                                x: code.bottomRight.x * imageWidth,
-                                y: code.bottomRight.y * imageHeight
-                            ).translateCoords(using: imageHeight)
-                            
-                            let bottomLeft = CGPoint(
-                                x: code.bottomLeft.x * imageWidth,
-                                y: code.bottomLeft.y * imageHeight
-                            ).translateCoords(using: imageHeight)
-                            
-                            path.move(to: topLeft)
-                            path.addLine(to: topRight)
-                            path.addLine(to: bottomRight)
-                            path.addLine(to: bottomLeft)
-                            path.closeSubpath()
-                        }
-                        .fill(Color.green.opacity(0.1))
-                        .stroke(
-                            selectedCode?.uuid == code.uuid ? Color.blue : Color.green,
-                            lineWidth: 2
-                        )
-                        .onTapGesture {
-                            guard !autoscan else { return }
-                            selectedCode = code
-                            showingConfirmationDialog = true
-                        }
-                    }
-                }
-            )
-    }
-    
+        
     private func loadImage(image: UIImage) {
         guard !isProcessingImage else { return }
         isProcessingImage = true
@@ -404,7 +288,135 @@ public struct BarcodeScannerView<Label: View>: View {
         
         return upscaledImage
     }
+}
 
+struct SelectBarcodeFromImage: View {
+    let state: ImageBarcodeData
+    let autoscan: Bool
+    let didScannedCodes: (CaptureType, Set<Barcode>) -> Void
+    
+    @State private var showingConfirmationDialog = false
+    @State private var selectedCode: VNBarcodeObservation?
+    
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        VStack(alignment: .leading) {
+            Button {
+                dismiss()
+            } label: {
+                Text("Cancel")
+                    .padding(.leading)
+            }
+
+            GeometryReader { geometry in
+                renderImageWithOverlay(state, geometry: geometry)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .clipped()
+            }
+
+            let text: LocalizedStringKey = if state.foundCodes.isEmpty {
+                "No codes recognized"
+            } else if autoscan {
+                "All recognized codes will be added automatically."
+            } else {
+                "Tap on a recognized code to select it"
+            }
+
+            HStack {
+                if autoscan {
+                    ProgressView()
+                }
+                Text(text)
+                    .font(.caption)
+                    .padding()
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.bottom)
+        }
+        .padding()
+        .alert(isPresented: $showingConfirmationDialog) {
+            Alert(
+                title: Text("Confirm Selection"),
+                message: Text("Do you want to select this code?"),
+                primaryButton: .default(Text("Yes")) {
+                    if let selectedCode {
+                       didScannedCodes(.file, .init([selectedCode].map(Barcode.init(observation:))))
+                    }
+                    showingConfirmationDialog = false
+                },
+                secondaryButton: .cancel(Text("No")) {
+                    selectedCode = nil
+                    showingConfirmationDialog = false
+                }
+            )
+        }
+        .onAppear {
+            // if autoscan is on, return all codes
+            if autoscan {
+                didScannedCodes(.file, .init(state.foundCodes.map(Barcode.init(observation:))))
+            }
+        }
+    }
+    
+    private func renderImageWithOverlay(_ state: ImageBarcodeData, geometry: GeometryProxy) -> some View {
+        Image(uiImage: state.image)
+            .resizable()
+            .scaledToFit()
+            .overlay(
+                GeometryReader { geometry in
+                    let imageSize = geometry.size
+                    let imageWidth = imageSize.width
+                    let imageHeight = imageSize.height
+                    ForEach(state.foundCodes, id: \.uuid) { code in
+                        Path { path in
+                            let topLeft = CGPoint(
+                                x: code.topLeft.x * imageWidth,
+                                y: code.topLeft.y * imageHeight
+                            ).translateCoords(using: imageHeight)
+                            
+                            let topRight = CGPoint(
+                                x: code.topRight.x * imageWidth,
+                                y: code.topRight.y * imageHeight
+                            ).translateCoords(using: imageHeight)
+                            
+                            let bottomRight = CGPoint(
+                                x: code.bottomRight.x * imageWidth,
+                                y: code.bottomRight.y * imageHeight
+                            ).translateCoords(using: imageHeight)
+                            
+                            let bottomLeft = CGPoint(
+                                x: code.bottomLeft.x * imageWidth,
+                                y: code.bottomLeft.y * imageHeight
+                            ).translateCoords(using: imageHeight)
+                            
+                            path.move(to: topLeft)
+                            path.addLine(to: topRight)
+                            path.addLine(to: bottomRight)
+                            path.addLine(to: bottomLeft)
+                            path.closeSubpath()
+                        }
+                        .fill(Color.green.opacity(0.1))
+                        .stroke(
+                            selectedCode?.uuid == code.uuid ? Color.blue : Color.green,
+                            lineWidth: 2
+                        )
+                        .onTapGesture {
+                            guard !autoscan else { return }
+                            selectedCode = code
+                            showingConfirmationDialog = true
+                        }
+                    }
+                }
+            )
+    }
+}
+
+struct ImageBarcodeData: Hashable, Identifiable {
+    public var id: Int { self.hashValue }
+    
+    let image: UIImage
+    let foundCodes: [VNBarcodeObservation]
 }
 
 extension UIImage.Orientation {

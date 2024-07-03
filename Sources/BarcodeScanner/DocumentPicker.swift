@@ -37,6 +37,8 @@ struct DocumentPicker: UIViewControllerRepresentable {
             }
         }
         
-        public func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {}
+        public func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+            
+        }
     }
 }
