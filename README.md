@@ -51,10 +51,12 @@ BarcodeScannerView(
 }
 ```
 ### Privacy:  
-- Library interface is public
-
-
+- BarcodeScannerView is public
+  
 ## Preview
-<img src="https://github.com/numob/BarcodeScannerLibraryIOS/assets/164918815/6d877515-9bbf-4189-a901-6f2b0821fcd5" alt="Screenshot 2024-06-24 at 1 44 24 PM" width="400"/>
+<div style="display: flex; gap: 10px;">
+    <img src="https://github.com/numob/BarcodeScannerLibraryIOS/assets/164918815/d2fa023c-974d-430c-a073-214692c8b531" alt="Screenshot 2024-07-03 at 1 12 14 AM" height="400"/>
+    <img src="https://github.com/numob/BarcodeScannerLibraryIOS/assets/164918815/7a2e1f43-41f1-4379-883b-82f2f84cb67f" alt="IMG_5097" height="400"/>
+</div>
 
 
