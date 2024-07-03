@@ -65,4 +65,6 @@ BarcodeScannerView(
     <img src="https://github.com/numob/BarcodeScannerLibraryIOS/assets/164918815/eb4540a4-5948-43cd-bf4c-0d6ada2e6f7f" alt="IMG_0022" height="400"/>
 </div>
 
+***NOTE***
+Highlight for camera barcode scanning don't support angles not standard (0, 90, 180, 270)
 
