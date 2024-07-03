@@ -9,33 +9,41 @@
 ## BarcodeScannerView Class
 
 ### Privacy:  
-    - Library interface is public, all functions, and most properties accessible. 
+- Library interface is public
 
 A class that incorporates custom logic for selecting and returning barcodes recognized from `DataScannerViewController`.
 
 - **Parameters:**
-  - `onRecognizedItem`: A callback function that handles the recognized item and whether it includes the target. The callback provides two parameters:
-    - `scannedCode`: The recognized item (e.g., barcode) from the DataScannerViewController.
-    - `isInCenterOfView`: A boolean indicating whether the recognized item is within the specified focus area.
-  - `isCenterIconVisible`: A boolean that sets the maker in the center of the view visible or not; optional and default true.
-  
+  - `autoscan`: A boolean indicating whether to automatically process codes from capture types (photo, file). Optional and defaults to true.
+  - `restrictedArea`: A `CGSize` that determines the area on the view that can recognize barcodes, centered in the view. Optional and defaults to `CGSize(width: 200, height: 200)`.
+  - `alignment`: The alignment of the content within the view. Optional and defaults to `.bottom`.
+  - `didScannedCodes`: A callback function that handles the recognized barcodes and the capture type. The callback provides two parameters:
+    - `capture`: The capture type, which indicates the source of the barcode capture (camera or file) and additional information such as whether the barcode is in the center of the view.
+    - `barcodes`: An array of `Barcode` objects recognized from the DataScannerViewController. The object contains the following properties:
+      - `payloadString`: The string representation of the barcode's payload.
+      - `symbology`: The symbology type of the barcode, which can be either a known symbology or unknown.
+      - `scannedCode`: The raw `RecognizedItem` from DataScannerViewController, if available.
+      - `processedCode`: The `VNBarcodeObservation` from Vision, if available.
+  - `label`: A view builder that provides allows for custom modifiers for the media button displayed on the `BarcodeScannerView`.
+
 ### Example:
 ```swift
-    BarcodeScannerView(
-        didScannedCode: { scannedCode, isInCenterOfView in
-            self.scannedCode = scannedCode
-            self.isInCenterOfView = isInCenterOfView
-        },
-        isCenterIconVisible: false,
-        restrictedArea: CGSize(width: 200, height: 200)
-    )
-
-    BarcodeScannerView(
-        didScannedCode: { scannedCode, isInCenterOfView in
-            self.scannedCode = scannedCode
-            self.isInCenterOfView = isInCenterOfView
-        }
-    )
+BarcodeScannerView(
+    autoscan: true,
+    restrictedArea: CGSize(width: 200, height: 200),
+    alignment: .bottom,
+    didScannedCodes: { capture, barcodes in
+        self.captureType = capture
+        self.barcodes = barcodes
+    }
+) {
+    Text("Custom Text")
+        .frame(width: 300, height: 50)
+        .background(Color.blue)
+        .foregroundColor(.white)
+        .cornerRadius(10)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+}
 ```
 
 ## Preview

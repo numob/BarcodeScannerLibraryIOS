@@ -22,7 +22,7 @@ import UniformTypeIdentifiers
 ///   - restrictedAreaRect: A rect that determines the area on the view that can recognize bar codes, a rect of dimensions and is no coordinates (centered); optional
 /// Example:
 /// ```
-///BarcodeScannerView(
+/// PreviewBarcodeScanner(
 ///    didScannedCode: { scannedCode, isInCenterOfView in
 ///        self.scannedCode = scannedCode
 ///        self.isInCenterOfView = isInCenterOfView
@@ -30,7 +30,7 @@ import UniformTypeIdentifiers
 ///    isCenterIconVisible: false,
 ///    restrictedArea: CGSize(width: 200, height: 200)
 ///)
-/// BarcodeScannerView(
+/// PreviewBarcodeScanner(
 ///     didScannedCode: { scannedCode, isInCenterOfView in
 ///         self.scannedCode = scannedCode
 ///         self.isInCenterOfView = isInCenterOfView
@@ -44,8 +44,10 @@ import UniformTypeIdentifiers
 /// - displayFocusDimensions()
 
 @MainActor
- public struct BarcodeScanner: UIViewControllerRepresentable {
-    var didScannedCode: (RecognizedItem?, Bool) -> Void
+struct PreviewBarcodeScanner: UIViewControllerRepresentable {
+    @Binding var scan: Bool
+    
+    var didScannedCode: (RecognizedItem, Bool) -> Void
     var isCenterIconVisible: Bool = true
     var restrictedAreaSize: CGSize?
     var focusedViewWidth: CGFloat? {
@@ -79,16 +81,18 @@ import UniformTypeIdentifiers
         isHighFrameRateTrackingEnabled: true,
         isHighlightingEnabled: true
     )
-     
-     public init(
-        didScannedCode: @escaping (RecognizedItem?, Bool) -> Void,
+    
+    public init(
+        scan: Binding<Bool>,
         isCenterIconVisible: Bool = true,
-        restrictedAreaSize: CGSize? = nil
+        restrictedAreaSize: CGSize? = nil,
+        didScannedCode: @escaping (RecognizedItem, Bool) -> Void
     ) {
-         self.didScannedCode = didScannedCode
-         self.isCenterIconVisible = isCenterIconVisible
-         self.restrictedAreaSize = restrictedAreaSize
-     }
+        self._scan = scan
+        self.didScannedCode = didScannedCode
+        self.isCenterIconVisible = isCenterIconVisible
+        self.restrictedAreaSize = restrictedAreaSize
+    }
     
     func addRestrictedArea(to view: UIView) {
         let padding: CGFloat = 10.0
@@ -114,7 +118,7 @@ import UniformTypeIdentifiers
         ])
     }
     
-    public func makeUIViewController(context: Context) -> DataScannerViewController {  
+    func makeUIViewController(context: Context) -> DataScannerViewController {
         scannerViewController.delegate = context.coordinator
         
         do {
@@ -129,29 +133,37 @@ import UniformTypeIdentifiers
             //context.coordinator.displayOrientationLabel()
             
         }
-
+        
         return scannerViewController
     }
-     public func startScanner(){
-         do{
-             try scannerViewController.startScanning()
-         } catch {
-             print("Failed start")
-         }
-         
-     }
-     public func stopScanner(){
-         scannerViewController.stopScanning()
-     }
     
-    public func updateUIViewController(_ uiViewController: DataScannerViewController, context: Context) {
+    func startScanner(){
+        do{
+            try scannerViewController.startScanning()
+        } catch {
+            print("Failed start")
+        }
+        
+    }
+    
+    func stopScanner(){
+        scannerViewController.stopScanning()
+    }
+    
+    func updateUIViewController(_ uiViewController: DataScannerViewController, context: Context) {
         // required function
         if let targetView = uiViewController.view.subviews.first(where: { $0 is TargetView }) {
             targetView.isHidden = !isCenterIconVisible
         }
+        
+        if scan, !scannerViewController.isScanning {
+            startScanner()
+        } else if !scan, scannerViewController.isScanning {
+            stopScanner()
+        }
     }
     
-    public func makeCoordinator() -> Coordinator {
+    func makeCoordinator() -> Coordinator {
         return Coordinator(self, onRecognizedItem: didScannedCode)
     }
     func displayCutoutDimensions() {
@@ -170,15 +182,15 @@ import UniformTypeIdentifiers
         scannerViewController.view.addSubview(label)
     }
     @MainActor
-    public class Coordinator: NSObject, DataScannerViewControllerDelegate {
-        var parent: BarcodeScanner
-        var roundBoxMappings: [UUID: UIView] = [:]
-        var coordinateLabels: [UUID: UILabel] = [:]
-        var deviceOrientationLabel: UILabel?
-        var onRecognizedItem: (RecognizedItem?, Bool) -> Void
+    class Coordinator: NSObject, DataScannerViewControllerDelegate {
+        var parent: PreviewBarcodeScanner
+        var onRecognizedItem: (RecognizedItem, Bool) -> Void
         
+        private var roundBoxMappings: [UUID: UIView] = [:]
+        private var coordinateLabels: [UUID: UILabel] = [:]
+        private var deviceOrientationLabel: UILabel?
         
-        init(_ parent: BarcodeScanner, onRecognizedItem: @escaping (RecognizedItem?, Bool) -> Void) {
+        init(_ parent: PreviewBarcodeScanner, onRecognizedItem: @escaping (RecognizedItem, Bool) -> Void) {
             self.parent = parent
             self.onRecognizedItem = onRecognizedItem
             super.init()
@@ -211,10 +223,7 @@ import UniformTypeIdentifiers
             removeAllBorderedBoxes()
             removeAllCoordinateLabels()
             
-            if items.isEmpty {
-                onRecognizedItem(nil, false)
-                return
-            }
+            if items.isEmpty { return }
             
             let visibleItems: [RecognizedItem]
             
@@ -224,10 +233,8 @@ import UniformTypeIdentifiers
                 visibleItems = items
             }
             
-            guard let closestItem = findClosestToCenter(items: visibleItems) else {
-                onRecognizedItem(nil, false)
-                return
-            }
+            guard let closestItem = findClosestToCenter(items: visibleItems) else { return }
+            
             processItem(item: closestItem)
         }
         
@@ -289,7 +296,7 @@ import UniformTypeIdentifiers
         func processItem(item: RecognizedItem?) {
             // Will not run callback if nil
             guard let item = item else { return }
-
+            
             removeAllBorderedBoxes()
             removeAllCoordinateLabels()
             
@@ -297,19 +304,22 @@ import UniformTypeIdentifiers
             // displaySelectedCoords(frame: frame)
             switch item {
             case .barcode:
-                addSelectionFrame(frame: frame, text: nil, item: item)
+                //addSelectionFrame(frame: frame, text: nil, item: item)
+                print("Highlight Disabled")
             default:
                 print("No items recognized")
             }
             
-            let isinCenterOfView: Bool
-            if parent.focusedViewWidth != nil && parent.focusedViewHeight != nil {
-                isinCenterOfView = isTargetWithinItemBounds(item: item)
+            let isinCenterOfView: Bool = if parent.focusedViewWidth != nil && parent.focusedViewHeight != nil {
+                isTargetWithinItemBounds(item: item)
             } else {
-                isinCenterOfView = true
+                true
             }
             
-            onRecognizedItem(item, isinCenterOfView)
+            onRecognizedItem(
+                item, 
+                isinCenterOfView
+            )
         }
         
         func isTargetWithinItemBounds(item: RecognizedItem) -> Bool {
