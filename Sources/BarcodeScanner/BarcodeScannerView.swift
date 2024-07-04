@@ -97,10 +97,12 @@ public struct BarcodeScannerView<Label: View>: View {
                     didScannedCodes(.camera(isInCenter: isInCenterOfView), .init([scannedCode].flatMap(Barcode.init(item:))))
                 }
                 .overlay(alignment: imageChooseLabelAlignment) {
-                    label()
-                        .onTapGesture {
-                            isSelectingInput = true
-                        }
+                    Button{
+                        isSelectingInput = true
+                    }label:{
+                        label()
+                    }
+                    
                 }
             }
     
