@@ -9,34 +9,40 @@
 ## BarcodeScannerView Class
 A SwiftUI class that encapsulates functionality from `DataScannerViewController` and `VNBarcodeObservation` APIs using custom logic for selecting and returning barcodes.
 
-- **Parameters:**
-  - `autoscan`: A boolean indicating whether to automatically process codes from capture types (photo, file). Optional and defaults to true.
-  - `restrictedArea`: A `CGSize` that determines the area on the view that can recognize barcodes, centered in the view. Optional and defaults to `CGSize(width: 200, height: 200)`.
-  - `isCenterIconVisible`: A boolean that determines if the icon indicating the center of the view shows or not. Optional and defaults to true.
-  - `alignment`: The alignment of the content within the view. Optional and defaults to `.bottom`.
-  - `didScannedCodes`: A callback function that handles the recognized barcodes and the capture type. The callback provides two parameters:
-    - `capture`: The capture type, which indicates the source of the barcode capture (camera or file) and additional information such as whether the barcode is in the center of the view.
-    - `barcodes`: A set of `Barcode` objects recognized from the DataScannerViewController. The object contains the following properties:
-      - `id`: A UUID representing the unique identifier of the barcode.
-      - `payloadString`: The string representation of the barcode's payload.
-      - `symbology`: The symbology type of the barcode, which can be either a known symbology or unknown.
-  - `label`: A view builder that allows for custom modifiers for the media button displayed on the `BarcodeScannerView`.
+### **Parameters**
+- `restrictedArea`: A `CGSize` that determines the area on the view that can recognize barcodes, centered in the view. Optional and defaults to `CGSize(width: 200, height: 200)`.
+- `isCenterIconVisible`: A boolean that determines if the icon indicating the center of the view shows or not. Optional and defaults to `true`.
+- `isHighlightingCameraCode`: A boolean which enables or disables a green box highlighting to the recognized and returned barcode.
+- `imageChooseLabelAlignment`: The alignment of the content within the view. Optional and defaults to `.bottom`.
+- `returnMultipleSymbolsForLocalImage`: A boolean which determines if processing local images for codes will return multiple automatically or must be user-selected.
+- `didScannedCodes`: A callback function that handles the recognized barcodes and the capture type. The callback provides two parameters:
+  - `capture`: The capture type, which indicates the source of the barcode capture (camera or file) and additional information such as whether the barcode is in the center of the view.
+  - `barcodes`: An array of `Barcode` objects recognized from the `DataScannerViewController`. The object contains the following properties:
+    - `id`: A UUID representing the unique identifier of the barcode.
+    - `payloadString`: The string representation of the barcode's payload.
+    - `symbology`: The symbology type of the barcode, which can be either a known symbology or unknown.
+    - `recognizedItemCamera`: An optional `RecognizedItem` object representing the barcode or text recognized from the camera. This property is `nil` if the barcode was initialized from an image.
+    - `recognizedItemImage`: An optional `VNBarcodeObservation` object representing the barcode recognized from an image. This property is `nil` if the barcode was initialized from the camera.
+- `label`: A view builder that allows for custom modifiers for the media button displayed on the `BarcodeScannerView`.
 
-### Example:
+### Example
+
 ```swift
-// minimum configuration
+// Minimum configuration
 BarcodeScannerView(
     didScannedCodes: { capture, barcodes in
         self.captureType = capture
         self.barcodes = barcodes
     }
 )
-// full configuration
+
+// Full configuration
 BarcodeScannerView(
-    autoscan: true,
     restrictedArea: CGSize(width: 200, height: 200),
     isCenterIconVisible: false,
-    alignment: .bottom,
+    isHighlightingCameraCode: true,
+    imageChooseLabelAlignment: .bottom,
+    returnMultipleSymbolsForLocalImage: false,
     didScannedCodes: { capture, barcodes in
         self.captureType = capture
         self.barcodes = barcodes

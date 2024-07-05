@@ -15,26 +15,30 @@ import Foundation
 import UIKit
 /// A view that incorporates custom logic to select and return barcodes recognized from DataScannerViewController and VNBarcodeObservation APIs
 /// - Parameters:
-///   - autoscan: A boolean indicating whether to automatically process codes from capture types (photo, file). Optional and defaults to true.
 ///   - restrictedArea: A CGSize that determines the area on the view that can recognize barcodes, centered in the view. Optional and defaults to CGSize(width: 200, height: 200).
 ///   - isCenterIconVisible: A boolean that determines if the icon indicating the center of the view shows or not. Optional and defaults to true.
-///   - alignment: The alignment of the content within the view. Optional and defaults to .bottom.
+///   - isHighlightingCameraCode: a boolean which enables or disables a green box highlighting to the recognized and returned barcode.
+///   - imageChooseLabelAlignment: The alignment of the content within the view. Optional and defaults to .bottom.
+///   - returnMultipleSymbolsForLocalImage: a bool which determines if processings local images for codes will return multiple automatically or must be user selected.
 ///   - didScannedCodes: A callback function that handles the recognized barcodes and the capture type. The callback provides two parameters:
 ///       - capture: The capture type, which indicates the source of the barcode capture (camera or file) and additional information such as whether the barcode is in the center of the view.
-///       - barcodes: An array of `Barcode` objects recognized from the DataScannerViewController. The object contains the following properties:
+///       - barcodes: An array of `Barcode` objects recognized and returned. The object contains the following properties:
 ///           - id: A UUID representing the unique identifier of the barcode.
 ///           - payloadString: The string representation of the barcode's payload.
 ///           - symbology: The symbology type of the barcode, which can be either a known symbology or unknown.
+///           - recognizedItemCamera: An optional `RecognizedItem` object representing the barcode or text recognized from the camera. This property is `nil` if the barcode was initialized from an image.
+///           - recognizedItemImage: An optional `VNBarcodeObservation` object representing the barcode recognized from an image. This property is `nil` if the barcode was initialized from the camera.
 ///   - label: A view builder that provides custom modifiers for the media button displayed on the BarCodeScannerView
 /// - Example:
 /// ```
 /// BarcodeScannerView(
-///     autoscan: true,
 ///     restrictedArea: CGSize(width: 200, height: 200),
-///     isCenterIconVisible = false
-///     alignment: .bottom,
-///     didScannedCodes: { capture, barcodes in
-///         self.captureType = capture
+///     isCenterIconVisible = false,
+///     isHighlightingCameraCode, true,
+///     imageChooseLabelAlignment: .bottom,
+///     returnMultipleSymbolsForLocalImage = false,
+///     didScannedCodes: { captureSource, barcodes in
+///         self.captureType = captureSource
 ///         self.barcodes = barcodes
 ///     }
 /// ) {
@@ -45,6 +49,12 @@ import UIKit
 ///         .cornerRadius(10)
 ///         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
 /// }
+/// BarcodeScannerView(
+///    didScannedCodes: { captureSource, barcodes in
+///    self.captureType = captureSource
+///    self.barcodes = barcodes
+///     }
+///)
 /// ```
 public struct BarcodeScannerView<Label: View>: View {
     @State public var isCenterIconVisible = true

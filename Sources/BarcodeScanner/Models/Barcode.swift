@@ -1,10 +1,3 @@
-//
-//  Barcode.swift
-//
-//
-//  Created by Wei Chen on 7/2/24.
-//
-
 import Foundation
 import VisionKit
 import Vision
@@ -26,17 +19,18 @@ public struct Barcode: Identifiable {
     public let payloadString: String?
     public let symbology: BarcodeSymbology
     public let recognizedItemCamera: RecognizedItem?
-    public var recognizedItemImage: VNBarcodeObservation? = nil
+    public let recognizedItemImage: VNBarcodeObservation?
     
     /// Initializes a Barcode from a RecognizedItem.
     /// - Parameter item: The recognized item, which can be either text or a barcode.
-    public init(item: RecognizedItem) {
-        self.recognizedItemCamera = item
-        switch item {
+    public init(recognizedItem: RecognizedItem) {
+        self.recognizedItemCamera = recognizedItem
+        self.recognizedItemImage = nil
+        switch recognizedItem {
         case .text(let text):
             self.id = text.id
             self.payloadString = text.transcript
-            self.symbology = .unknown // Default value for non-barcode items
+            self.symbology = .unknown
         case .barcode(let barcode):
             self.id = barcode.id
             self.payloadString = barcode.payloadStringValue

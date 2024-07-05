@@ -11,24 +11,31 @@ import Vision
 import Foundation
 import UIKit
 import UniformTypeIdentifiers
-
+/*
+ var isCenterIconVisible: Bool
+ var restrictedAreaSize: CGSize?
+ var isShowingHighlighting: Bool
+ var didScannedCode: (RecognizedItem, Bool) -> Void
+ */
 
 /// A class that incorporates custom logic to select and return barcodes recognized from DataScannerViewController.
 /// - Parameters:
+///   - isCenterIconVisible: A boolean that sets the target visible or not; optional and default true
+///   - restrictedAreaSize: A rect that determines the area on the view that can recognize bar codes, a rect of dimensions and is no coordinates (centered); optional
+///   - isShowingHighlighting: a boolean which determines whether or not we attach to the view a highlighted box for the recognized and returned code. Default true
 ///   - didScannedCode: A callback function that handles the recognized item and whether it includes the target. The callback provides two parameters:
 ///       - scannedCode: The recognized item (e.g., barcode) from the DataScannerViewController.
 ///       - isInCenterOfView: A boolean indicating whether the recognized item is within the specified focus area.
-///   - isCenterIconVisible: A boolean that sets the target visible or not; optional and default true
-///   - restrictedAreaRect: A rect that determines the area on the view that can recognize bar codes, a rect of dimensions and is no coordinates (centered); optional
 /// Example:
 /// ```
 /// PreviewBarcodeScanner(
+///    isCenterIconVisible: false,
+///    restrictedArea: CGSize(width: 200, height: 200),
+///    isShowingHighlighting: false,
 ///    didScannedCode: { scannedCode, isInCenterOfView in
 ///        self.scannedCode = scannedCode
 ///        self.isInCenterOfView = isInCenterOfView
-///    },
-///    isCenterIconVisible: false,
-///    restrictedArea: CGSize(width: 200, height: 200)
+///    }
 ///)
 /// PreviewBarcodeScanner(
 ///     didScannedCode: { scannedCode, isInCenterOfView in
@@ -37,7 +44,7 @@ import UniformTypeIdentifiers
 ///     }
 /// )
 /// ```
-/// Includes data labels for coordinates, dimensions, and recognized item data for debugging:44
+/// Includes data labels for coordinates, dimensions, and recognized item data for debugging:
 /// - displayOrientationLabel()
 /// - displayRecognizedItemCoordinates(items: items)
 /// - displayFrameCoords()
