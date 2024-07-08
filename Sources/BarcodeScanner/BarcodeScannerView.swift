@@ -104,7 +104,7 @@ public struct BarcodeScannerView<Label: View>: View {
                     restrictedAreaSize: restrictedArea,
                     isShowingHighlighting: isHighlightingCameraCode
                 ) { scannedCode, isInCenterOfView in
-                    didScannedCodes(.camera(isInCenter: isInCenterOfView), .init([scannedCode].flatMap(Barcode.init(item:))))
+                    didScannedCodes(.camera(isInCenter: isInCenterOfView), [Barcode(recognizedItem: scannedCode)])
                 }
                 .overlay(alignment: imageChooseLabelAlignment) {
                     Button{
