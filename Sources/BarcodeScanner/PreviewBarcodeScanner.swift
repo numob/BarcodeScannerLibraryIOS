@@ -538,13 +538,14 @@ struct PreviewBarcodeScanner: UIViewControllerRepresentable {
     }
     
     func addTarget(to view: UIView) {
-        let targetSize: CGFloat = 30.0
+        let targetSize: CGFloat = 50.0
         let targetView = TargetView(frame: CGRect(x: (view.bounds.width - targetSize) / 2,
                                                   y: (view.bounds.height - targetSize) / 2,
                                                   width: targetSize,
                                                   height: targetSize))
         targetView.translatesAutoresizingMaskIntoConstraints = false
         targetView.isHidden = !isCenterIconVisible
+        targetView.backgroundColor = UIColor.white
         view.addSubview(targetView)
         
         NSLayoutConstraint.activate([
