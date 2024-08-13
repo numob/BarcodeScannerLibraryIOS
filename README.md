@@ -72,5 +72,5 @@ BarcodeScannerView(
 </div>
 
 ***NOTE***
-Highlight for camera barcode scanning don't support angles not standard (0, 90, 180, 270)
+Highlight for camera barcode scanning doesn't support angles not standard (0, 90, 180, 270)
 
