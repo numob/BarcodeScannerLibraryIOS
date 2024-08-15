@@ -12,6 +12,7 @@
       }
     },
     "Camera Disabled" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {

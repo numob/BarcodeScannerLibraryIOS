@@ -545,7 +545,6 @@ struct PreviewBarcodeScanner: UIViewControllerRepresentable {
                                                   height: targetSize))
         targetView.translatesAutoresizingMaskIntoConstraints = false
         targetView.isHidden = !isCenterIconVisible
-        targetView.backgroundColor = UIColor.white
         view.addSubview(targetView)
         
         NSLayoutConstraint.activate([

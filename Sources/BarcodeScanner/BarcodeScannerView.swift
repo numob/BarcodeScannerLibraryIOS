@@ -63,6 +63,7 @@ public struct BarcodeScannerView<Label: View>: View {
     @State private var isSelectingInput = false
     @State private var showingImageSheet: ImageBarcodeData?
     @State private var isProcessingImage = false
+    @State private var isCameraActive = true
     
     private let label: () -> Label
     private let didScannedCodes: (CaptureSource, [Barcode]) -> Void
@@ -72,7 +73,7 @@ public struct BarcodeScannerView<Label: View>: View {
     private let isHighlightingCameraCode: Bool
     
     private var shouldHideCamera: Bool {
-        showingImagePicker || showingDocumentPicker || showingImageSheet != nil || isProcessingImage
+        showingImagePicker || showingDocumentPicker || showingImageSheet != nil || isProcessingImage || !isCameraActive
     }
     
     public init(
@@ -139,6 +140,12 @@ public struct BarcodeScannerView<Label: View>: View {
         }
         .sheet(item: $showingImageSheet) { state in
             SelectBarcodeFromImage(state: state, autoscan: returnMultipleSymbolsForLocalImage, didScannedCodes: didScannedCodes)
+        }
+        .onAppear{
+            isCameraActive = true
+        }
+        .onDisappear{
+            isCameraActive = false
         }
     }
         
