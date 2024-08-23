@@ -78,7 +78,7 @@ struct PreviewBarcodeScanner: UIViewControllerRepresentable {
             .pdf417,
             .qr
         ])],
-        qualityLevel: .balanced,
+        qualityLevel: .fast,
         recognizesMultipleItems: true,
         isHighFrameRateTrackingEnabled: true,
         isHighlightingEnabled: true
@@ -285,7 +285,8 @@ struct PreviewBarcodeScanner: UIViewControllerRepresentable {
             
             if self.parent.isShowingHighlighting{
                 let frame = calculateSelectedFrame(item: item)
-                // displaySelectedCoords(frame: frame)
+                //displaySelectedCoords(frame: frame)
+                //displayFrameCoords(frame: <#T##CGRect#>)
                 switch item {
                 case .barcode:
                 addSelectionFrame(frame: frame, text: nil, item: item)
@@ -312,12 +313,13 @@ struct PreviewBarcodeScanner: UIViewControllerRepresentable {
                 height: targetSize
             )
             
-            let itemBounds = CGRect(
-                x: item.bounds.topLeft.x,
-                y: item.bounds.topLeft.y,
-                width: abs(item.bounds.topRight.x - item.bounds.topLeft.x),
-                height: abs(item.bounds.topLeft.y - item.bounds.bottomLeft.y)
-            )
+//            let itemBounds = CGRect(
+//                x: item.bounds.topLeft.x,
+//                y: item.bounds.topLeft.y,
+//                width: abs(item.bounds.topRight.x - item.bounds.topLeft.x),
+//                height: abs(item.bounds.topLeft.y - item.bounds.bottomLeft.y)
+//            )
+            let itemBounds = calculateSelectedFrame(item: item)
             
             return itemBounds.intersects(crosshairRect)
         }
@@ -577,6 +579,7 @@ class RoundedRectLabel: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         
+        translatesAutoresizingMaskIntoConstraints = false
         label.textColor = .white
         label.font = UIFont.systemFont(ofSize: 10)
         label.textAlignment = .left
