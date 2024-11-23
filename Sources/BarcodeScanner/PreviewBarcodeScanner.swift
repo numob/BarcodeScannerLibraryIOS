@@ -4,7 +4,7 @@
 //
 //  Created by Wei Chen on 6/17/24.
 //
-
+#if !targetEnvironment(macCatalyst)
 import SwiftUI
 import VisionKit
 import Vision
@@ -667,3 +667,4 @@ class FocusedView: UIView {
 }
 
 
+#endif

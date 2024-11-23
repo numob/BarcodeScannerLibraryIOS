@@ -1,3 +1,4 @@
+#if !targetEnvironment(macCatalyst)
 import Foundation
 import VisionKit
 import Vision
@@ -48,3 +49,5 @@ public struct Barcode: Identifiable {
         self.symbology = .known(observation.symbology)
     }
 }
+
+#endif

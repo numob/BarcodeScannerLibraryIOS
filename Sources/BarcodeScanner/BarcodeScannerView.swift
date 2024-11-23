@@ -4,7 +4,7 @@
 //
 //  Created by Wei Chen on 6/27/24.
 
-
+#if !targetEnvironment(macCatalyst)
 import BarcodeScanner
 import SwiftUI
 import Vision
@@ -474,3 +474,4 @@ extension CGPoint {
         return CGPoint(x: self.x, y: imageHeight - self.y)
     }
 }
+#endif
