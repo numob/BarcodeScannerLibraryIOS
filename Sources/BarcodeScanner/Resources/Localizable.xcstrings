@@ -1,16 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "All recognized codes will be added automatically." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "识别到的所有条码将自动加入列表"
-          }
-        }
-      }
-    },
     "Cancel" : {
       "localizations" : {
         "zh-Hans" : {
@@ -27,6 +17,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "未识别到条码。"
+          }
+        }
+      }
+    },
+    "Select barcode" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择条码"
           }
         }
       }

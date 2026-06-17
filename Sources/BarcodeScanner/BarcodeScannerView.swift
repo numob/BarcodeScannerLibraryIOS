@@ -147,7 +147,7 @@ public struct BarcodeScannerView<Label: View>: View {
             }
         }
         .sheet(item: $showingImageSheet) { state in
-            SelectBarcodeFromImage(state: state, autoscan: returnMultipleSymbolsForLocalImage, didScannedCodes: didScannedCodes)
+            SelectBarcodeFromImage(state: state, didScannedCodes: didScannedCodes)
         }
         .onAppear{
             isCameraActive = true
@@ -163,13 +163,22 @@ public struct BarcodeScannerView<Label: View>: View {
         
         let request = VNDetectBarcodesRequest { (request, error) in
             if let results = request.results as? [VNBarcodeObservation] {
-                if returnMultipleSymbolsForLocalImage{
-                    self.showingImageSheet = .init(image: image, foundCodes: results)
-                }else{
+                guard !results.isEmpty else {
+                    return
+                }
+                if results.count == 1{
                     if let first = results.first{
                         DispatchQueue.main.async {
                             didScannedCodes(.camera(isInCenter: true), [Barcode(observation: first)])
                         }
+                    }
+                }else{
+                    if returnMultipleSymbolsForLocalImage{
+                        DispatchQueue.main.async {
+                            didScannedCodes(.camera(isInCenter: true), results.map{.init(observation: $0)})
+                        }
+                    }else{
+                        self.showingImageSheet = .init(image: image, foundCodes: results)
                     }
                 }
             }
@@ -216,15 +225,25 @@ public struct BarcodeScannerView<Label: View>: View {
     private func detectBarcodes(in image: UIImage) {
         let request = VNDetectBarcodesRequest { (request, error) in
             if let results = request.results as? [VNBarcodeObservation] {
-                if returnMultipleSymbolsForLocalImage{
-                    self.showingImageSheet = .init(image: image, foundCodes: results)
-                }else{
+                guard !results.isEmpty else {
+                    return
+                }
+                if results.count == 1{
                     if let first = results.first{
                         DispatchQueue.main.async {
                             didScannedCodes(.camera(isInCenter: true), [Barcode(observation: first)])
                         }
                     }
+                }else{
+                    if returnMultipleSymbolsForLocalImage{
+                        DispatchQueue.main.async {
+                            didScannedCodes(.camera(isInCenter: true), results.map{.init(observation: $0)})
+                        }
+                    }else{
+                        self.showingImageSheet = .init(image: image, foundCodes: results)
+                    }
                 }
+                
             }
         }
         
@@ -347,69 +366,46 @@ public struct BarcodeScannerView<Label: View>: View {
 
 struct SelectBarcodeFromImage: View {
     let state: ImageBarcodeData
-    let autoscan: Bool
     let didScannedCodes: (CaptureSource, [Barcode]) -> Void
-    
-    //@State private var showingConfirmationDialog = false
-    @State private var selectedCode: VNBarcodeObservation?
-    
+        
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        VStack(alignment: .leading) {
-             Button {
-                dismiss()
-            } label: {
-                Text("Cancel", bundle: .module)
-                    .padding(.leading)
-            }
-
-            GeometryReader { geometry in
-                renderImageWithOverlay(state, geometry: geometry)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .clipped()
-            }
-
-            let statusText: Text = if state.foundCodes.isEmpty {
-                Text("No codes recognized.", bundle: .module)
-            } else if autoscan {
-                Text("All recognized codes will be added automatically.", bundle: .module)
-            } else {
-                Text("Tap on a recognized code to select it.", bundle: .module)
-            }
-
-            HStack {
-                if autoscan {
-                    ProgressView()
+        NavigationStack {
+            VStack(alignment: .leading) {
+                GeometryReader { geometry in
+                    renderImageWithOverlay(state, geometry: geometry)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .clipped()
                 }
-                statusText
-                    .font(.caption)
-                    .padding()
+
+                let statusText: Text = if state.foundCodes.isEmpty {
+                    Text("No codes recognized.", bundle: .module)
+                } else {
+                    Text("Tap on a recognized code to select it.", bundle: .module)
+                }
+
+                HStack {
+                    statusText
+                        .font(.caption)
+                        .padding()
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.bottom)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.bottom)
-        }
-        .padding()
-//        .alert(isPresented: $showingConfirmationDialog) {
-//            Alert(
-//                title: Text(NSLocalizedString("Confirm Selection", comment: "")),
-//                message: Text(NSLocalizedString("Do you want to select this code?", comment: "")),
-//                primaryButton: .default(Text(NSLocalizedString("Yes", comment: ""))) {
-//                    if let selectedCode {
-//                       didScannedCodes(.file, .init([selectedCode].map(Barcode.init(observation:))))
-//                    }
-//                    showingConfirmationDialog = false
-//                },
-//                secondaryButton: .cancel(Text(NSLocalizedString("No", comment: ""))) {
-//                    selectedCode = nil
-//                    showingConfirmationDialog = false
-//                }
-//            )
-//        }
-        .onAppear {
-            // if autoscan is on, return all codes
-            if autoscan {
-                didScannedCodes(.file, .init(state.foundCodes.map(Barcode.init(observation:))))
+            .padding()
+            .navigationTitle("Select barcode")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button {
+                       dismiss()
+                   } label: {
+                       Text("Cancel", bundle: .module)
+                           .padding(.leading)
+                   }
+
+                }
             }
         }
     }
@@ -453,12 +449,12 @@ struct SelectBarcodeFromImage: View {
                         }
                         .fill(Color.green.opacity(0.1))
                         .stroke(
-                            selectedCode?.uuid == code.uuid ? Color.blue : Color.green,
+                            Color.green ,
                             lineWidth: 2
                         )
                         .onTapGesture {
-                            guard !autoscan else { return }
-                            selectedCode = code
+                            didScannedCodes(.file, [.init(observation: code)])
+                            dismiss()
                         }
                     }
                 }
