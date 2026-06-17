@@ -5,7 +5,6 @@
 //  Created by Wei Chen on 6/27/24.
 
 #if !targetEnvironment(macCatalyst)
-import BarcodeScanner
 import SwiftUI
 import Vision
 import PDFKit
@@ -108,26 +107,35 @@ public struct BarcodeScannerView<Label: View>: View {
                     didScannedCodes(.camera(isInCenter: isInCenterOfView), [Barcode(recognizedItem: scannedCode)])
                 }
                 .overlay(alignment: imageChooseLabelAlignment) {
-                    Button{
-                        isSelectingInput = true
-                    }label:{
+                    Menu {
+                        Button {
+                            showingImagePicker = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "photo.on.rectangle")
+                                Text("Select Photo")
+                            }
+                        }
+                        Button {
+                            showingDocumentPicker = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "doc")
+                                Text("Select File")
+                            }
+                        }
+
+                    } label: {
                         label()
                     }
+
                     
                 }
             }
     
         }
         .background(.background)
-        //.animation(.easeInOut(duration: 0.2), value: shouldHideCamera)
-        .confirmationDialog(NSLocalizedString("Select Media for Scanning", comment: ""), isPresented: $isSelectingInput, titleVisibility: .visible) {
-            Button(NSLocalizedString("Select Photo", comment: "")) {
-                showingImagePicker = true
-            }
-            Button(NSLocalizedString("Select File", comment: "")) {
-                showingDocumentPicker = true
-            }
-        }
+        
         .sheet(isPresented: $showingImagePicker) {
             ImagePicker { selectedImage in
                 loadImage(image: selectedImage)
@@ -223,11 +231,9 @@ public struct BarcodeScannerView<Label: View>: View {
             if let image = UIImage(contentsOfFile: url.path) {
                 completion(image)
             } else {
-                print("Failed to load image from URL")
                 completion(nil)
             }
         } else {
-            print("Unsupported file type")
             completion(nil)
         }
     }
@@ -237,7 +243,6 @@ public struct BarcodeScannerView<Label: View>: View {
         
         
         guard url.startAccessingSecurityScopedResource() else {
-            print("Failed to start accessing security-scoped resource")
             completion(nil)
             return
         }
