@@ -167,7 +167,9 @@ public struct BarcodeScannerView<Label: View>: View {
                     self.showingImageSheet = .init(image: image, foundCodes: results)
                 }else{
                     if let first = results.first{
-                        didScannedCodes(.camera(isInCenter: true), [Barcode(observation: first)])
+                        DispatchQueue.main.async {
+                            didScannedCodes(.camera(isInCenter: true), [Barcode(observation: first)])
+                        }
                     }
                 }
             }
@@ -212,7 +214,9 @@ public struct BarcodeScannerView<Label: View>: View {
                     self.showingImageSheet = .init(image: image, foundCodes: results)
                 }else{
                     if let first = results.first{
-                        didScannedCodes(.camera(isInCenter: true), [Barcode(observation: first)])
+                        DispatchQueue.main.async {
+                            didScannedCodes(.camera(isInCenter: true), [Barcode(observation: first)])
+                        }
                     }
                 }
             }
