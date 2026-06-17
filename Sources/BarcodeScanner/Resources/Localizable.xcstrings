@@ -41,17 +41,6 @@
         }
       }
     },
-    "Select Media for Scanning" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "选择用于扫描的图片"
-          }
-        }
-      }
-    },
     "Select Photo" : {
       "localizations" : {
         "zh-Hans" : {
