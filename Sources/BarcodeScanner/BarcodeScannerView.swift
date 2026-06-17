@@ -394,7 +394,7 @@ struct SelectBarcodeFromImage: View {
                 .padding(.bottom)
             }
             .padding()
-            .navigationTitle("Select barcode")
+            .navigationTitle(Text("Select barcode", bundle: .module))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
