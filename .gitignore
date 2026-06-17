@@ -15,6 +15,10 @@
 local.properties
 */.DS_Store
 .build
+*.xccheckout
+*.moved-aside
+*.xcuserstate
+*.xcscmblueprint
 /zbar/build
 .log
 /.idea/*
