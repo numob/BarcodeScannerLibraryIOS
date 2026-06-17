@@ -113,7 +113,7 @@ public struct BarcodeScannerView<Label: View>: View {
                         } label: {
                             HStack {
                                 Image(systemName: "photo.on.rectangle")
-                                Text("Select Photo")
+                                Text("Select Photo", bundle: .module)
                             }
                         }
                         Button {
@@ -121,7 +121,7 @@ public struct BarcodeScannerView<Label: View>: View {
                         } label: {
                             HStack {
                                 Image(systemName: "doc")
-                                Text("Select File")
+                                Text("Select File", bundle: .module)
                             }
                         }
 
@@ -360,7 +360,7 @@ struct SelectBarcodeFromImage: View {
              Button {
                 dismiss()
             } label: {
-                Text(NSLocalizedString("Cancel", comment: ""))
+                Text("Cancel", bundle: .module)
                     .padding(.leading)
             }
 
@@ -370,19 +370,19 @@ struct SelectBarcodeFromImage: View {
                     .clipped()
             }
 
-            let text: LocalizedStringKey = if state.foundCodes.isEmpty {
-                LocalizedStringKey("No codes recognized.")
+            let statusText: Text = if state.foundCodes.isEmpty {
+                Text("No codes recognized.", bundle: .module)
             } else if autoscan {
-                LocalizedStringKey("All recognized codes will be added automatically.")
+                Text("All recognized codes will be added automatically.", bundle: .module)
             } else {
-                LocalizedStringKey("Tap on a recognized code to select it.")
+                Text("Tap on a recognized code to select it.", bundle: .module)
             }
 
             HStack {
                 if autoscan {
                     ProgressView()
                 }
-                Text(text)
+                statusText
                     .font(.caption)
                     .padding()
             }
