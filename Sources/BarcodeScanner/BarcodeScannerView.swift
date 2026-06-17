@@ -177,7 +177,10 @@ public struct BarcodeScannerView<Label: View>: View {
         
     
         
-        guard let cgImage = image.cgImage else { return }
+        guard let cgImage = image.cgImage else {
+            isProcessingImage = false
+            return
+        }
         let handler = VNImageRequestHandler(
             cgImage: cgImage,
             orientation: image.imageOrientation.cgImagePropertyOrientation,
@@ -201,7 +204,10 @@ public struct BarcodeScannerView<Label: View>: View {
         
         DispatchQueue.global(qos: .userInitiated).async {
             processDocument(url: documentURL) { image in
-                guard let image else { return }
+                guard let image else {
+                    isProcessingImage = false
+                    return
+                }
                 self.detectBarcodes(in: image)
             }
         }
@@ -222,7 +228,10 @@ public struct BarcodeScannerView<Label: View>: View {
             }
         }
         
-        guard let cgImage = image.cgImage else { return }
+        guard let cgImage = image.cgImage else {
+            isProcessingImage = false
+            return
+        }
         let handler = VNImageRequestHandler(
             cgImage: cgImage,
             orientation: image.imageOrientation.cgImagePropertyOrientation,
