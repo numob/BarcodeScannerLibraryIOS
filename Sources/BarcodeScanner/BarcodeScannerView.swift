@@ -163,9 +163,17 @@ public struct BarcodeScannerView<Label: View>: View {
         
         let request = VNDetectBarcodesRequest { (request, error) in
             if let results = request.results as? [VNBarcodeObservation] {
-                self.showingImageSheet = .init(image: image, foundCodes: results)
+                if returnMultipleSymbolsForLocalImage{
+                    self.showingImageSheet = .init(image: image, foundCodes: results)
+                }else{
+                    if let first = results.first{
+                        didScannedCodes(.camera(isInCenter: true), [Barcode(observation: first)])
+                    }
+                }
             }
         }
+        
+    
         
         guard let cgImage = image.cgImage else { return }
         let handler = VNImageRequestHandler(
@@ -173,7 +181,7 @@ public struct BarcodeScannerView<Label: View>: View {
             orientation: image.imageOrientation.cgImagePropertyOrientation,
             options: [:]
         )
-        
+                
         DispatchQueue.global(qos: .userInitiated).async {
             do {
                 try handler.perform([request])
@@ -200,7 +208,13 @@ public struct BarcodeScannerView<Label: View>: View {
     private func detectBarcodes(in image: UIImage) {
         let request = VNDetectBarcodesRequest { (request, error) in
             if let results = request.results as? [VNBarcodeObservation] {
-                self.showingImageSheet = .init(image: image, foundCodes: results)
+                if returnMultipleSymbolsForLocalImage{
+                    self.showingImageSheet = .init(image: image, foundCodes: results)
+                }else{
+                    if let first = results.first{
+                        didScannedCodes(.camera(isInCenter: true), [Barcode(observation: first)])
+                    }
+                }
             }
         }
         
